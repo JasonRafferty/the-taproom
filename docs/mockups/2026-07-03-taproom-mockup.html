@@ -1,0 +1,991 @@
+<title>The Taproom — Siply Internal Hub</title>
+<!--
+  Font note: Siply's live brand faces are Cabinet Grotesk/Bebas Neue (display) and
+  Manrope/Inter (body). The Artifact sandbox blocks webfont CDNs and no local font
+  files were available to embed as data URIs, so this mockup approximates the same
+  feel with system fonts: heavy-weight, tight-tracked, uppercase system sans standing
+  in for the condensed display face, and the OS default humanist sans for body text.
+-->
+<style>
+  :root {
+    --bg: #1A1A1A;
+    --surface: #202327;
+    --rail: #24272B;
+    --card: #2D3035;
+    --card-hover: #34383E;
+    --line: #383C42;
+    --accent: #D0FF14;
+    --accent-ink: #182000;
+    --accent-2: #6C244C;
+    --accent-2-soft: rgba(108, 36, 76, 0.35);
+    --ink: #F5F6F3;
+    --mist: #9CA3AA;
+    --mist-dim: #6B7178;
+    --good: #6FCF97;
+    --good-soft: rgba(111, 207, 151, 0.14);
+    --warn: #F2B84B;
+    --warn-soft: rgba(242, 184, 75, 0.14);
+    --bad: #E5484D;
+    --bad-soft: rgba(229, 72, 77, 0.14);
+    --pending: #9CA3AA;
+    --pending-soft: rgba(156, 163, 170, 0.12);
+    --radius: 10px;
+    --font-display: -apple-system, "Segoe UI Semibold", "Helvetica Neue", Arial, sans-serif;
+    --font-body: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, p, ul, figure { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; }
+  button { font-family: inherit; }
+  input, select { font-family: inherit; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rail-link, .btn-primary, .chip, .card, .tab, .avatar, .filter-chip, .drawer, .drawer-backdrop {
+      transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease, opacity 160ms ease;
+    }
+  }
+
+  /* ---------- App shell ---------- */
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  .rail {
+    background: var(--rail); border-right: 1px solid var(--line);
+    padding: 22px 16px; display: flex; flex-direction: column; gap: 22px;
+  }
+
+  .rail-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+  .rail-mark { font-size: 22px; line-height: 1; }
+  .rail-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: 0.03em; text-transform: uppercase; }
+  .rail-sub { font-size: 12px; color: var(--mist); margin-top: 2px; }
+
+  .rail-nav { display: flex; flex-direction: column; gap: 16px; }
+  .rail-group { display: flex; flex-direction: column; gap: 4px; }
+  .rail-group-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--mist-dim); padding: 0 10px; margin-bottom: 2px; }
+
+  .rail-link {
+    display: flex; align-items: center; gap: 10px; background: transparent; border: 1px solid transparent;
+    color: var(--mist); text-align: left; padding: 9px 10px; border-radius: var(--radius);
+    font-size: 14px; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  .rail-link.board-link { padding-left: 20px; font-size: 13.5px; }
+  .rail-link svg { flex: none; opacity: 0.85; }
+  .rail-link:hover { background: var(--card); color: var(--ink); }
+  .rail-link.is-active { background: var(--card); color: var(--accent); border-color: var(--line); }
+  .rail-link.is-active svg { opacity: 1; }
+
+  .rail-team { margin-top: auto; padding: 0 4px; }
+  .rail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mist-dim); margin-bottom: 4px; }
+  .rail-hint { font-size: 11px; color: var(--mist-dim); margin-bottom: 10px; }
+  .avatars { display: flex; gap: 8px; }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 11px; font-weight: 700; color: var(--bg); background: var(--c, var(--accent));
+    cursor: pointer; border: none; padding: 0;
+  }
+  .avatar:hover { transform: translateY(-2px); }
+  .avatar.is-viewing { box-shadow: 0 0 0 2px var(--rail), 0 0 0 4px var(--accent); }
+
+  /* ---------- Content ---------- */
+  .content { padding: 30px 40px 60px; min-width: 0; }
+  .view { display: none; }
+  .view.is-active { display: block; }
+
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--mist); margin-bottom: 6px; }
+  .page-head h1 { font-family: var(--font-display); font-size: 30px; font-weight: 800; letter-spacing: 0.01em; text-transform: uppercase; text-wrap: balance; }
+  .page-purpose { font-size: 13.5px; color: var(--mist); max-width: 62ch; margin-bottom: 22px; }
+
+  .btn-primary {
+    background: var(--accent); color: var(--accent-ink); border: none; padding: 10px 16px;
+    border-radius: var(--radius); font-weight: 700; font-size: 13.5px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-primary:hover { background: #bfe816; }
+
+  .search-input {
+    background: var(--card); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 999px; padding: 9px 15px; font-size: 13px; min-width: 220px;
+  }
+  .search-input::placeholder { color: var(--mist-dim); }
+  .search-input:hover { border-color: #454a51; }
+
+  /* ---------- Panels / grid ---------- */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mist); margin-bottom: 14px; }
+  .panel-note { font-size: 12px; color: var(--mist-dim); margin-top: 12px; }
+
+  /* ---------- Home: quick capture ---------- */
+  .capture-panel {
+    background: var(--surface); border: 1px solid var(--accent-2); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  .capture-panel h2 { color: var(--ink); font-size: 15px; text-transform: none; letter-spacing: 0; margin-bottom: 4px; }
+  .capture-panel .panel-note { margin-top: 0; margin-bottom: 14px; }
+  .capture-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .capture-input { flex: 1 1 260px; background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: var(--radius); padding: 10px 13px; font-size: 13.5px; }
+  .capture-input::placeholder { color: var(--mist-dim); }
+  .capture-select { background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: var(--radius); padding: 10px 12px; font-size: 13.5px; }
+
+  /* ---------- Due / done / my-cards lists ---------- */
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .list-item { display: flex; align-items: center; gap: 8px; font-size: 13.5px; flex-wrap: wrap; }
+  .list-marker { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; flex: none; font-size: 11px; font-weight: 700; }
+  .list-marker.due { background: var(--warn-soft); color: var(--warn); }
+  .list-marker.done { background: var(--good-soft); color: var(--good); }
+  .list-item time { margin-left: auto; font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .src-tag { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 5px; flex: none; }
+  .src-tag.src-bugs { background: var(--bad-soft); color: var(--bad); }
+  .src-tag.src-features { background: var(--accent-2-soft); color: #e39dc0; }
+  .src-tag.src-tasks { background: var(--pending-soft); color: var(--mist); }
+
+  /* ---------- Quick links ---------- */
+  .quick-links { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Board toolbar ---------- */
+  .board-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line);
+    color: var(--mist); font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .filter-chip:hover { color: var(--ink); border-color: #454a51; }
+  .filter-chip.is-active { background: var(--accent-2-soft); border-color: var(--accent-2); color: var(--ink); }
+  .filter-chip .avatar { width: 18px; height: 18px; font-size: 8.5px; cursor: inherit; }
+  .toolbar-right { display: flex; gap: 10px; align-items: center; }
+
+  /* ---------- Board ---------- */
+  .board-scroll { overflow-x: auto; padding-bottom: 8px; }
+  .board { display: flex; gap: 16px; align-items: flex-start; }
+
+  .column { width: 264px; flex: 0 0 264px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .column-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 0 2px 2px; }
+  .column-title { flex: 1 1 auto; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--mist); line-height: 1.3; }
+  .column-count { flex: none; font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; background: var(--card); border-radius: 999px; padding: 1px 7px; margin-top: 1px; }
+
+  .column-empty, .column-empty-hint { border: 1px dashed var(--line); border-radius: 8px; padding: 18px 12px; text-align: center; color: var(--mist-dim); font-size: 12.5px; line-height: 1.5; }
+  .column-empty-hint { display: none; border-style: dashed; }
+  .column-empty-hint.is-visible { display: block; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 8px; padding: 11px 12px; cursor: pointer; }
+  .card:hover { background: var(--card-hover); border-color: #454a51; }
+  .card.pri-high { border-left-color: var(--bad); }
+  .card.pri-med { border-left-color: var(--warn); }
+  .card.pri-low { border-left-color: var(--mist-dim); }
+
+  .card-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; margin-bottom: 8px; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card-meta-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 15px; }
+  .card-priority { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bad); font-weight: 700; }
+  .card-due { font-size: 10.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; }
+  .card-due.is-today { color: var(--warn); font-weight: 700; }
+  .card .avatar { width: 22px; height: 22px; font-size: 9.5px; cursor: inherit; }
+
+  /* ---------- Resources ---------- */
+  .tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); flex: 1 1 auto; }
+  .tab { background: none; border: none; color: var(--mist); font-size: 13.5px; font-weight: 700; padding: 10px 4px; margin-right: 18px; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--ink); }
+  .tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.is-active { display: block; }
+
+  .res-group { margin-bottom: 22px; }
+  .res-group-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mist-dim); margin-bottom: 10px; }
+  .res-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .res-link { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 13px; text-decoration: none; color: var(--ink); }
+  .res-link:hover { border-color: var(--accent); }
+  .res-link-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--accent-2-soft); color: var(--accent); display: grid; place-items: center; flex: none; font-size: 11px; font-weight: 700; }
+  .res-link-title { font-size: 13.5px; font-weight: 600; }
+  .res-link-sub { font-size: 11.5px; color: var(--mist-dim); margin-top: 1px; }
+
+  .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .note-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 17px; }
+  .note-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+  .note-title { font-size: 14.5px; font-weight: 700; }
+  .note-tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: #e39dc0; background: var(--accent-2-soft); padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .note-preview { font-size: 13px; color: var(--mist); line-height: 1.55; margin-bottom: 12px; }
+  .note-foot { font-size: 11.5px; color: var(--mist-dim); display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Environments ---------- */
+  .env-cards { display: flex; flex-direction: column; gap: 10px; }
+  .env-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px 17px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .env-name { font-weight: 700; font-size: 14.5px; }
+  .env-url { font-family: var(--font-mono); font-size: 11.5px; color: var(--mist-dim); margin-top: 2px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .pill.pending { background: var(--pending-soft); color: var(--pending); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .env-meta { font-size: 12px; color: var(--mist); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Usage / stat tiles ---------- */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .stat-tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .stat-label { font-size: 12.5px; color: var(--mist); margin-bottom: 8px; }
+  .stat-num { font-family: var(--font-display); font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 8px; }
+  .stat-num.is-pending { color: var(--mist-dim); }
+  .stat-sub { font-size: 12px; color: var(--mist); }
+  .bar-row { display: flex; align-items: flex-end; gap: 4px; height: 34px; margin: 10px 0; }
+  .bar { flex: 1; background: var(--accent-2); border-radius: 3px 3px 0 0; opacity: 0.55; }
+  .bar.is-peak { background: var(--accent); opacity: 1; }
+
+  /* ---------- Card detail drawer ---------- */
+  .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 40; opacity: 0; pointer-events: none; }
+  .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 380px; max-width: 92vw;
+    background: var(--surface); border-left: 1px solid var(--line); z-index: 41;
+    transform: translateX(100%); padding: 24px 22px; overflow-y: auto;
+  }
+  .drawer.is-open { transform: translateX(0); }
+  .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .drawer-eyebrow { font-size: 11.5px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+  .drawer-close { background: var(--card); border: 1px solid var(--line); color: var(--mist); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 13px; flex: none; }
+  .drawer-close:hover { color: var(--ink); }
+  .drawer h3 { font-family: var(--font-display); font-size: 19px; font-weight: 800; letter-spacing: 0; text-transform: none; margin: 14px 0 6px; line-height: 1.3; }
+  .drawer-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13px; gap: 10px; }
+  .drawer-row:first-of-type { border-top: none; }
+  .drawer-label { color: var(--mist); flex: none; }
+  .drawer-assignee { display: flex; align-items: center; gap: 8px; }
+  .drawer-assignee .avatar { cursor: default; }
+  .drawer-desc { font-size: 13.5px; color: var(--mist); line-height: 1.6; margin: 16px 0 4px; }
+  .drawer-foot { font-size: 11.5px; color: var(--mist-dim); margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+</style>
+
+<div class="app">
+  <aside class="rail" aria-label="Primary navigation">
+    <div class="rail-brand">
+      <span class="rail-mark" aria-hidden="true">🍻</span>
+      <div>
+        <p class="rail-name">The&nbsp;Taproom</p>
+        <p class="rail-sub">Siply internal hub</p>
+      </div>
+    </div>
+
+    <nav class="rail-nav">
+      <div class="rail-group">
+        <button class="rail-link is-active" data-view="home" type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 7.5L8 2l6 5.5M3.5 6.5V14h9V6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Home
+        </button>
+      </div>
+
+      <div class="rail-group">
+        <p class="rail-group-label">Boards</p>
+        <button class="rail-link board-link" data-view="board" data-board="bugs" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="9" r="4" stroke="currentColor" stroke-width="1.4"/><path d="M8 5V3M5 5.5L3.5 4M11 5.5L12.5 4M4 9H2M14 9h-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Bugs
+        </button>
+        <button class="rail-link board-link" data-view="board" data-board="features" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2l1.6 3.6L13 7l-3.4 1.4L8 12l-1.6-3.6L3 7l3.4-1.4L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Features
+        </button>
+        <button class="rail-link board-link" data-view="board" data-board="tasks" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.7 1.7 3.3-3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Tasks
+        </button>
+      </div>
+
+      <div class="rail-group">
+        <button class="rail-link" data-view="resources" type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3.2C3 2.9 3.3 2.7 3.6 2.8c1.5.4 3 1.1 4.4 2 1.4-.9 2.9-1.6 4.4-2 .3-.1.6.1.6.4v9c0 .2-.2.4-.4.5-1.5.4-2.9 1-4.2 1.9a.6.6 0 01-.8 0c-1.3-.9-2.7-1.5-4.2-1.9-.2-.1-.4-.3-.4-.5v-9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 4.8V13.6" stroke="currentColor" stroke-width="1.3"/></svg>
+          Resources
+        </button>
+        <button class="rail-link" data-view="environments" type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="6.8" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="11.1" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="4.2" r="0.6" fill="currentColor"/><circle cx="4.6" cy="8.5" r="0.6" fill="currentColor"/><circle cx="4.6" cy="12.8" r="0.6" fill="currentColor"/></svg>
+          Environments
+        </button>
+        <button class="rail-link" data-view="usage" type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 13.5V3M2.5 13.5H13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="5" y="8.5" width="2" height="4" fill="currentColor"/><rect x="8.2" y="6" width="2" height="6.5" fill="currentColor"/><rect x="11.4" y="4" width="2" height="8.5" fill="currentColor"/></svg>
+          Usage
+        </button>
+      </div>
+    </nav>
+
+    <div class="rail-team">
+      <p class="rail-label">Viewing as</p>
+      <p class="rail-hint">Click a teammate to see their view</p>
+      <div class="avatars" id="team-avatars">
+        <button class="avatar" style="--c:#D0FF14" data-code="AM" data-name="Ashoka Mullassery" title="Ashoka Mullassery — CEO" type="button">AM</button>
+        <button class="avatar" style="--c:#6C244C" data-code="AK" data-name="Anulome Kishore" title="Anulome Kishore — CTO" type="button">AK</button>
+        <button class="avatar" style="--c:#F2B84B" data-code="AR" data-name="Arvin Razavi" title="Arvin Razavi — CMO" type="button">AR</button>
+        <button class="avatar is-viewing" style="--c:#6FCF97" data-code="JR" data-name="Jason Rafferty" title="Jason Rafferty" type="button">JR</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <!-- ================= HOME ================= -->
+    <section id="view-home" class="view is-active">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Friday, 3 July 2026 · Viewing as <span id="home-viewer">Jason</span></p>
+          <h1>Morning, crew</h1>
+        </div>
+      </header>
+      <p class="page-purpose">Start here — capture what's on your mind, see what's yours, see what's due.</p>
+
+      <div class="capture-panel">
+        <h2>Got something on your mind?</h2>
+        <p class="panel-note">Drop it here — it lands on the right board so it's never just lost in a WhatsApp thread.</p>
+        <div class="capture-row">
+          <input class="capture-input" type="text" placeholder="e.g. Map pins overlap when zoomed in on Manchester">
+          <select class="capture-select">
+            <option>Feature idea</option>
+            <option>Bug</option>
+            <option>Task</option>
+          </select>
+          <button class="btn-primary" type="button">Add card</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <section class="panel">
+          <h2>My open cards</h2>
+          <ul class="list" id="my-cards-list"></ul>
+        </section>
+
+        <section class="panel">
+          <h2>Due soon</h2>
+          <ul class="list" id="due-soon-list"></ul>
+        </section>
+      </div>
+
+      <div class="grid-2">
+        <section class="panel">
+          <h2>Recently completed</h2>
+          <ul class="list">
+            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> GDPR export &amp; erasure endpoints <time>2d ago</time></li>
+            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-features">Feature</span> Discover feed — Community + Following <time>Jun 2026</time></li>
+            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> Select colour scheme <time>Jan 2026</time></li>
+            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> Complete logo design <time>Jan 2026</time></li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h2>Quick links</h2>
+          <div class="quick-links">
+            <a class="chip" href="#">↗ GitHub — Siply-MVP</a>
+            <a class="chip" href="#">↗ Figma (shared by Nav)</a>
+            <a class="chip" href="#">↗ Canva — Pitch deck</a>
+            <a class="chip" href="#">↗ MEC Notion page</a>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ================= BOARD ================= -->
+    <section id="view-board" class="view">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow" id="board-eyebrow">Board</p>
+          <h1 id="board-title">Tasks</h1>
+        </div>
+        <button class="btn-primary" type="button">+ New card</button>
+      </header>
+      <p class="page-purpose" id="board-purpose">Everything else — admin, legal, funding, marketing, ops.</p>
+
+      <div class="board-toolbar">
+        <div class="filter-row" id="board-filters">
+          <button class="filter-chip is-active" data-filter="all" type="button">All</button>
+          <button class="filter-chip" data-filter="mine" type="button"><span class="avatar" style="--c:#6FCF97" id="mine-chip-avatar">JR</span> Mine</button>
+          <button class="filter-chip" data-filter="AM" type="button"><span class="avatar" style="--c:#D0FF14">AM</span> Ashoka</button>
+          <button class="filter-chip" data-filter="AK" type="button"><span class="avatar" style="--c:#6C244C">AK</span> Anulome</button>
+          <button class="filter-chip" data-filter="AR" type="button"><span class="avatar" style="--c:#F2B84B">AR</span> Arvin</button>
+          <button class="filter-chip" data-filter="JR" type="button"><span class="avatar" style="--c:#6FCF97">JR</span> Jason</button>
+        </div>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" id="board-search" placeholder="Search this board…">
+        </div>
+      </div>
+
+      <div class="board-scroll">
+        <!-- Tasks: To do / In progress / Done -->
+        <div class="board" id="board-tasks">
+          <div class="column">
+            <div class="column-head"><span class="column-title">To do</span><span class="column-count">6</span></div>
+            <div class="card pri-med" data-title="Discuss buying a server with Anulome" data-board="Tasks" data-column="To Do" data-priority="Medium" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Compare a small VPS vs. staying on Vercel/Neon free tier for the MVP's first few months of real traffic." data-created-by="Ashoka" data-created="3 days ago">
+              <p class="card-title">Discuss buying a server with Anulome</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-high" data-title="Book a call with Bryan Baillie — registration &amp; visas" data-board="Tasks" data-column="To Do" data-priority="High" data-assignee="AM" data-assignee-name="Ashoka Mullassery" data-due="Today" data-desc="Confirm whether our mix of visa statuses affects how we register the company and split directorships." data-created-by="Ashoka" data-created="5 days ago">
+              <p class="card-title">Book a call with Bryan Baillie — registration &amp; visas</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span><span class="card-due is-today">Due Today</span></span><span class="avatar" style="--c:#D0FF14">AM</span></div>
+            </div>
+            <div class="card pri-med" data-title="Call with Anulome — privacy &amp; cookies policy" data-board="Tasks" data-column="To Do" data-priority="Medium" data-assignee="AK" data-assignee-name="Anulome Kishore" data-due="Mon" data-desc="Walk through what the cookie categories should be before drafting the policy with Asad." data-created-by="Anulome" data-created="4 days ago">
+              <p class="card-title">Call with Anulome — privacy &amp; cookies policy</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-due">Due Mon</span></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-low" data-title="Research founders' agreement &amp; GDPR" data-board="Tasks" data-column="To Do" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-due="Wed" data-desc="Pull together a first-draft founders' agreement structure ahead of the call with Asad." data-created-by="Arvin" data-created="6 days ago">
+              <p class="card-title">Research founders' agreement &amp; GDPR</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-due">Due Wed</span></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+            <div class="card pri-low" data-title="Ask Spark about funding" data-board="Tasks" data-column="To Do" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-due="Fri" data-desc="Follow up on the pre-trading business plan competition submission and timeline." data-created-by="Arvin" data-created="1 week ago">
+              <p class="card-title">Ask Spark about funding</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-due">Due Fri</span></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+            <div class="card pri-med" data-title="Plan server purchase" data-board="Tasks" data-column="To Do" data-priority="Medium" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Once the hosting decision is made, get the actual purchase and setup scheduled." data-created-by="Anulome" data-created="3 days ago">
+              <p class="card-title">Plan server purchase</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">In progress</span><span class="column-count">2</span></div>
+            <div class="card pri-high" data-title="Set up Google Workspace + team access" data-board="Tasks" data-column="In Progress" data-priority="High" data-assignee="JR" data-assignee-name="Jason Rafferty" data-desc="Get all four of us on siply.app email addresses and shared drive access." data-created-by="Jason" data-created="2 days ago">
+              <p class="card-title">Set up Google Workspace + team access</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span></span><span class="avatar" style="--c:#6FCF97">JR</span></div>
+            </div>
+            <div class="card pri-high" data-title="Company registration" data-board="Tasks" data-column="In Progress" data-priority="High" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="File incorporation paperwork once the share structure question with Bryan is resolved." data-created-by="Arvin" data-created="4 days ago">
+              <p class="card-title">Company registration</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Done</span><span class="column-count">5</span></div>
+            <div class="card pri-low" data-title="Select colour scheme" data-board="Tasks" data-column="Done" data-priority="Low" data-assignee="AM" data-assignee-name="Ashoka Mullassery" data-desc="Locked the Siply brand palette — lime, magenta, charcoal." data-created-by="Ashoka" data-created="Jan 2026">
+              <p class="card-title">Select colour scheme</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#D0FF14">AM</span></div>
+            </div>
+            <div class="card pri-low" data-title="Complete logo design" data-board="Tasks" data-column="Done" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="Final wordmark and app icon signed off." data-created-by="Arvin" data-created="Jan 2026">
+              <p class="card-title">Complete logo design</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+            <div class="card pri-low" data-title="Gantt chart for project plan" data-board="Tasks" data-column="Done" data-priority="Low" data-assignee="JR" data-assignee-name="Jason Rafferty" data-desc="Rough milestone timeline for the first six months." data-created-by="Jason" data-created="Jan 2026">
+              <p class="card-title">Gantt chart for project plan</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6FCF97">JR</span></div>
+            </div>
+            <div class="card pri-low" data-title="Draft consumer survey" data-board="Tasks" data-column="Done" data-priority="Low" data-assignee="JR" data-assignee-name="Jason Rafferty" data-desc="94 responses collected — see Resources → Notes and Usage → Validation research." data-created-by="Jason" data-created="Jan 2026">
+              <p class="card-title">Draft consumer survey</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6FCF97">JR</span></div>
+            </div>
+            <div class="card pri-low" data-title="GDPR export &amp; erasure endpoints" data-board="Tasks" data-column="Done" data-priority="Low" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Article 15/17 endpoints shipped and covered by the GDPR test suite." data-created-by="Anulome" data-created="2 days ago">
+              <p class="card-title">GDPR export &amp; erasure endpoints</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bugs: To do / In progress / Ready to test / Ready for release / Released -->
+        <div class="board" id="board-bugs" hidden>
+          <div class="column">
+            <div class="column-head"><span class="column-title">To do</span><span class="column-count">2</span></div>
+            <div class="card pri-med" data-title="Map pins overlap at high zoom in dense areas" data-board="Bugs" data-column="To Do" data-priority="Medium" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="In Manchester city centre, pins for venues within ~50m of each other stack on top of each other at zoom level 17+, making individual venues untappable." data-created-by="Anulome" data-created="3 days ago">
+              <p class="card-title">Map pins overlap at high zoom in dense areas</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-low" data-title="Push notification opt-in prompt shows twice on first launch" data-board="Bugs" data-column="To Do" data-priority="Low" data-assignee="JR" data-assignee-name="Jason Rafferty" data-desc="iOS shows the system permission prompt, then our own explainer prompt appears again straight after instead of before it." data-created-by="Jason" data-created="1 week ago">
+              <p class="card-title">Push notification opt-in prompt shows twice on first launch</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6FCF97">JR</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">In progress</span><span class="column-count">2</span></div>
+            <div class="card pri-high" data-title="GDPR export omits liked/commented posts" data-board="Bugs" data-column="In Progress" data-priority="High" data-assignee="AK" data-assignee-name="Anulome Kishore" data-due="Fri" data-desc="Article 15 data export only includes logged drinks and profile fields — likes and comments a user has made aren't in the JSON bundle." data-created-by="Ashoka" data-created="4 days ago">
+              <p class="card-title">GDPR export omits liked/commented posts</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span><span class="card-due">Due Fri</span></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-med" data-title="Venue tagging autocomplete lags on slow connections" data-board="Bugs" data-column="In Progress" data-priority="Medium" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="On 3G, the venue search-as-you-type debounce fires too aggressively and results take 2-3s to appear." data-created-by="Arvin" data-created="5 days ago">
+              <p class="card-title">Venue tagging autocomplete lags on slow connections</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Ready to test</span><span class="column-count">1</span></div>
+            <div class="card pri-med" data-title="Drink Card share image wrong aspect ratio on Android Chrome" data-board="Bugs" data-column="Ready to Test" data-priority="Medium" data-assignee="AK" data-assignee-name="Anulome Kishore" data-due="Mon" data-desc="The 1080×1350 canvas render comes out stretched to 1080×1500 on Android Chrome — looks fine on iOS Safari." data-created-by="Anulome" data-created="yesterday">
+              <p class="card-title">Drink Card share image wrong aspect ratio on Android Chrome</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-due">Due Mon</span></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Ready for release</span><span class="column-count">2</span></div>
+            <div class="card pri-low" data-title="Follow button doesn't update optimistically on profile" data-board="Bugs" data-column="Ready for Release" data-priority="Low" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Tapping Follow waits for the network response before the button changes state — feels laggy on slower connections." data-created-by="Anulome" data-created="1 week ago">
+              <p class="card-title">Follow button doesn't update optimistically on profile</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-high" data-title="Google Sign-in loop on iOS Safari private browsing" data-board="Bugs" data-column="Ready for Release" data-priority="High" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Private browsing blocks the third-party cookie the OAuth exchange relies on, sending users back to the sign-in screen in a loop." data-created-by="Anulome" data-created="2 weeks ago">
+              <p class="card-title">Google Sign-in loop on iOS Safari private browsing</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Released</span><span class="column-count">0</span></div>
+            <p class="column-empty">Nothing released yet — Siply hasn't launched.</p>
+          </div>
+        </div>
+
+        <!-- Features: To do / In progress / Ready to test / Ready for release / Released -->
+        <div class="board" id="board-features" hidden>
+          <div class="column">
+            <div class="column-head"><span class="column-title">To do</span><span class="column-count">3</span></div>
+            <div class="card pri-low" data-title="AR label scanning" data-board="Features" data-column="To Do" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="Scan a physical drink label to pull up its Siply reviews and rating instantly — parked until we have enough logged drinks for it to be useful." data-created-by="Arvin" data-created="1 week ago">
+              <p class="card-title">AR label scanning</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+            <div class="card pri-low" data-title="Ordering integration — Deliveroo / Uber Eats" data-board="Features" data-column="To Do" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="Link a featured drink straight to a delivery partner for ingredients or the drink itself; Siply earns referral revenue." data-created-by="Arvin" data-created="1 week ago">
+              <p class="card-title">Ordering integration — Deliveroo / Uber Eats</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+            <div class="card pri-med" data-title="Leaderboards &amp; challenges" data-board="Features" data-column="To Do" data-priority="Medium" data-assignee="AM" data-assignee-name="Ashoka Mullassery" data-desc="Local rankings (e.g. 'most drinks logged in Manchester this month') plus in-app challenges to drive repeat opens." data-created-by="Ashoka" data-created="6 days ago">
+              <p class="card-title">Leaderboards &amp; challenges</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#D0FF14">AM</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">In progress</span><span class="column-count">2</span></div>
+            <div class="card pri-med" data-title="Taste Profile Builder — &quot;your year in drinks&quot;" data-board="Features" data-column="In Progress" data-priority="Medium" data-assignee="AM" data-assignee-name="Ashoka Mullassery" data-due="Wed" data-desc="Spotify-Wrapped-style yearly summary of what someone drank, where, and with who — designed to be shared outside the app." data-created-by="Ashoka" data-created="3 days ago">
+              <p class="card-title">Taste Profile Builder — "your year in drinks"</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-due">Due Wed</span></span><span class="avatar" style="--c:#D0FF14">AM</span></div>
+            </div>
+            <div class="card pri-high" data-title="Map of Drinks — price/rating legend" data-board="Features" data-column="In Progress" data-priority="High" data-assignee="AK" data-assignee-name="Anulome Kishore" data-due="Today" data-desc="Add a legend dropdown to the map so pins can show price tier (£/££/£££) or rating at a glance instead of just a generic pin." data-created-by="Anulome" data-created="2 days ago">
+              <p class="card-title">Map of Drinks — price/rating legend</p>
+              <div class="card-meta"><span class="card-meta-left"><span class="card-priority">High</span><span class="card-due is-today">Due Today</span></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Ready to test</span><span class="column-count">1</span></div>
+            <div class="card pri-med" data-title="Achievements &amp; streaks" data-board="Features" data-column="Ready to Test" data-priority="Medium" data-assignee="JR" data-assignee-name="Jason Rafferty" data-desc="Milestone badges and daily/weekly streaks to give people a reason to open the app even without a discount to chase." data-created-by="Jason" data-created="4 days ago">
+              <p class="card-title">Achievements &amp; streaks</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6FCF97">JR</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Ready for release</span><span class="column-count">1</span></div>
+            <div class="card pri-low" data-title="Venue price-tier filter (£ / ££ / £££)" data-board="Features" data-column="Ready for Release" data-priority="Low" data-assignee="AR" data-assignee-name="Arvin Razavi" data-desc="Filter the discover feed and map by price tier — QA passed, waiting on the next release window." data-created-by="Arvin" data-created="2 days ago">
+              <p class="card-title">Venue price-tier filter (£ / ££ / £££)</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#F2B84B">AR</span></div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-head"><span class="column-title">Released</span><span class="column-count">3</span></div>
+            <div class="card pri-low" data-title="Discover feed — Community + Following tabs" data-board="Features" data-column="Released" data-priority="Low" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Two feed tabs: Community (everyone) and Following (people you follow) — shipped as part of the MVP." data-created-by="Anulome" data-created="Jun 2026">
+              <p class="card-title">Discover feed — Community + Following tabs</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-low" data-title="GDPR Article 15/17 export &amp; erasure" data-board="Features" data-column="Released" data-priority="Low" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Self-serve data export and account deletion, live in Settings." data-created-by="Anulome" data-created="Jun 2026">
+              <p class="card-title">GDPR Article 15/17 export &amp; erasure</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+            <div class="card pri-low" data-title="Google Sign-in + one-time consent gate" data-board="Features" data-column="Released" data-priority="Low" data-assignee="AK" data-assignee-name="Anulome Kishore" data-desc="Emergent-managed Google OAuth with a one-time versioned GDPR consent screen on first login." data-created-by="Anulome" data-created="Jun 2026">
+              <p class="card-title">Google Sign-in + one-time consent gate</p>
+              <div class="card-meta"><span class="card-meta-left"></span><span class="avatar" style="--c:#6C244C">AK</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RESOURCES ================= -->
+    <section id="view-resources" class="view">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Reference</p>
+          <h1>Resources</h1>
+        </div>
+      </header>
+      <p class="page-purpose">Links and notes that don't belong on a board — design files, legal Q&amp;A, funding docs.</p>
+
+      <div class="tabs-row">
+        <div class="tabs">
+          <button class="tab is-active" data-tab="links" type="button">Links</button>
+          <button class="tab" data-tab="notes" type="button">Notes</button>
+        </div>
+        <input class="search-input" type="text" id="res-search" placeholder="Search resources…">
+      </div>
+
+      <div id="tab-links" class="tab-panel is-active">
+        <div class="res-group">
+          <p class="res-group-title">Design</p>
+          <div class="res-links">
+            <a class="res-link" href="#"><span class="res-link-icon">Fg</span><span><span class="res-link-title">Figma</span><br><span class="res-link-sub">Shared by Nav</span></span></a>
+            <a class="res-link" href="#"><span class="res-link-icon">Cv</span><span><span class="res-link-title">Canva — Pitch deck</span><br><span class="res-link-sub">canva.link/i9dwhp8…</span></span></a>
+            <a class="res-link" href="#"><span class="res-link-icon">Cv</span><span><span class="res-link-title">Canva — App Store preview</span><br><span class="res-link-sub">canva.link/h1gon60…</span></span></a>
+          </div>
+        </div>
+        <div class="res-group">
+          <p class="res-group-title">Engineering</p>
+          <div class="res-links">
+            <a class="res-link" href="#"><span class="res-link-icon">Gh</span><span><span class="res-link-title">GitHub — Siply-MVP</span><br><span class="res-link-sub">1505-Ak/Siply-MVP</span></span></a>
+          </div>
+        </div>
+        <div class="res-group">
+          <p class="res-group-title">Product &amp; strategy</p>
+          <div class="res-links">
+            <a class="res-link" href="#"><span class="res-link-icon">Nt</span><span><span class="res-link-title">MEC — Powered by MEC</span><br><span class="res-link-sub">Notion page</span></span></a>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-notes" class="tab-panel">
+        <div class="notes-grid">
+          <article class="note-card">
+            <div class="note-top"><p class="note-title">GDPR compliance checklist</p><span class="note-tag">Legal</span></div>
+            <p class="note-preview">What data we collect, where it's stored, retention windows, cookie categories, and user rights (export/delete) — before launch sign-off.</p>
+            <div class="note-foot"><span>Updated by Anulome</span><span>2 days ago</span></div>
+          </article>
+          <article class="note-card">
+            <div class="note-top"><p class="note-title">Legal advisory — questions for Asad</p><span class="note-tag">Legal</span></div>
+            <p class="note-preview">Company structure, founders' agreement, IP assignment, T&amp;Cs, and the biggest mistakes founders make in year one.</p>
+            <div class="note-foot"><span>Updated by Ashoka</span><span>5 days ago</span></div>
+          </article>
+          <article class="note-card">
+            <div class="note-top"><p class="note-title">Funding roadmap</p><span class="note-tag">Funding</span></div>
+            <p class="note-preview">Bootstrap → Pre-seed ($50–100k) → Seed ($500k–1M) → Series A ($5M+), with milestones and use of funds per stage.</p>
+            <div class="note-foot"><span>Updated by Arvin</span><span>1 week ago</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ENVIRONMENTS ================= -->
+    <section id="view-environments" class="view">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Infrastructure</p>
+          <h1>Environments</h1>
+        </div>
+      </header>
+      <p class="page-purpose">Where the Siply product itself is deployed — separate from any of the tools above.</p>
+
+      <section class="panel">
+        <h2>Siply environments</h2>
+        <div class="env-cards">
+          <div class="env-card">
+            <div><p class="env-name">Test</p><p class="env-url">staging.siply.app</p></div>
+            <span class="pill warn">Setting up</span>
+            <p class="env-meta">No deploys yet</p>
+          </div>
+          <div class="env-card">
+            <div><p class="env-name">Production</p><p class="env-url">app.siply.app</p></div>
+            <span class="pill pending">Not started</span>
+            <p class="env-meta">Planned after Test soaks</p>
+          </div>
+        </div>
+        <p class="panel-note">Once Test and Prod are live, this panel can pull real uptime, response time, and last-deploy timestamps from a health-check endpoint — a natural v2 addition, no new subsystem required.</p>
+      </section>
+    </section>
+
+    <!-- ================= USAGE ================= -->
+    <section id="view-usage" class="view">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Product &amp; research</p>
+          <h1>Usage</h1>
+        </div>
+      </header>
+      <p class="page-purpose">How many people are actually using Siply, plus what we already know from pre-launch research.</p>
+
+      <section class="panel" style="margin-bottom:16px;">
+        <h2>Live product usage</h2>
+        <div class="stat-row">
+          <div class="stat-tile"><p class="stat-label">Total users</p><p class="stat-num is-pending">—</p><p class="stat-sub">Awaiting launch</p></div>
+          <div class="stat-tile"><p class="stat-label">Signups (7d)</p><p class="stat-num is-pending">—</p><p class="stat-sub">Awaiting launch</p></div>
+          <div class="stat-tile"><p class="stat-label">Active this week</p><p class="stat-num is-pending">—</p><p class="stat-sub">Awaiting launch</p></div>
+        </div>
+        <p class="panel-note">Wires up once there's real traffic — a simple events table or Vercel/Plausible analytics feeding three numbers here is enough for v1; no need for a full analytics suite yet.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Validation research</h2>
+        <div class="stat-row">
+          <div class="stat-tile"><p class="stat-label">People surveyed</p><p class="stat-num">94</p><p class="stat-sub">Pre-launch consumer survey</p></div>
+          <div class="stat-tile">
+            <p class="stat-label">Forget or lose rewards</p>
+            <p class="stat-num">84%</p>
+            <div class="bar-row"><div class="bar" style="height:40%"></div><div class="bar" style="height:55%"></div><div class="bar is-peak" style="height:100%"></div><div class="bar" style="height:30%"></div></div>
+          </div>
+          <div class="stat-tile"><p class="stat-label">Say Siply would be useful</p><p class="stat-num">68%</p><p class="stat-sub">40% "very useful," 28% "somewhat"</p></div>
+          <div class="stat-tile"><p class="stat-label">Open to downloading</p><p class="stat-num">86%</p><p class="stat-sub">36% immediately, 50% open to it</p></div>
+        </div>
+        <p class="panel-note">Source: the pre-launch consumer survey — full writeup lives in Resources → Notes.</p>
+      </section>
+    </section>
+
+  </main>
+</div>
+
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer" aria-label="Card details" aria-hidden="true">
+  <div class="drawer-head">
+    <p class="drawer-eyebrow" id="drawer-board">Board · Column</p>
+    <button class="drawer-close" id="drawer-close" type="button" aria-label="Close card details">✕</button>
+  </div>
+  <h3 id="drawer-title">Card title</h3>
+  <div class="drawer-row"><span class="drawer-label">Priority</span><span class="pill" id="drawer-priority">Medium</span></div>
+  <div class="drawer-row"><span class="drawer-label">Assignee</span><span class="drawer-assignee"><span class="avatar" id="drawer-assignee-avatar">AK</span><span id="drawer-assignee-name">Anulome</span></span></div>
+  <div class="drawer-row"><span class="drawer-label">Due</span><span id="drawer-due">No due date</span></div>
+  <p class="drawer-desc" id="drawer-desc">Description…</p>
+  <p class="drawer-foot" id="drawer-meta">Added by — · —</p>
+</aside>
+
+<script>
+  (function () {
+    var AVATAR_COLORS = { AM: '#D0FF14', AK: '#6C244C', AR: '#F2B84B', JR: '#6FCF97' };
+    var AVATAR_NAMES = { AM: 'Ashoka', AK: 'Anulome', AR: 'Arvin', JR: 'Jason' };
+    var DUE_ORDER = { Today: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 };
+    var currentUser = 'JR';
+
+    /* ---- Nav / view switching ---- */
+    var railLinks = document.querySelectorAll('.rail-link');
+    var views = document.querySelectorAll('.view');
+    var boardTitle = document.getElementById('board-title');
+    var boardPurpose = document.getElementById('board-purpose');
+    var boards = document.querySelectorAll('.board');
+    var boardInfo = {
+      bugs: { label: 'Bugs', purpose: 'Something broken in the live product? Log it, track it, watch it through to release.' },
+      features: { label: 'Features', purpose: 'Ideas and roadmap items — what should Siply build next, tracked through to release.' },
+      tasks: { label: 'Tasks', purpose: 'Everything else — admin, legal, funding, marketing, ops.' }
+    };
+
+    function showView(name) {
+      views.forEach(function (v) { v.classList.toggle('is-active', v.id === 'view-' + name); });
+    }
+
+    function showBoard(key) {
+      boards.forEach(function (b) { b.hidden = b.id !== 'board-' + key; });
+      boardTitle.textContent = boardInfo[key].label;
+      boardPurpose.textContent = boardInfo[key].purpose;
+      resetBoardControls();
+    }
+
+    railLinks.forEach(function (link) {
+      link.addEventListener('click', function () {
+        railLinks.forEach(function (l) { l.classList.remove('is-active'); });
+        link.classList.add('is-active');
+        var view = link.getAttribute('data-view');
+        showView(view);
+        if (view === 'board') { showBoard(link.getAttribute('data-board')); }
+      });
+    });
+
+    /* ---- Resources tabs + search ---- */
+    var tabs = document.querySelectorAll('.tab');
+    var panels = document.querySelectorAll('.tab-panel');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('is-active'); });
+        tab.classList.add('is-active');
+        var key = tab.getAttribute('data-tab');
+        panels.forEach(function (p) { p.classList.toggle('is-active', p.id === 'tab-' + key); });
+      });
+    });
+
+    var resSearch = document.getElementById('res-search');
+    resSearch.addEventListener('input', function () {
+      var q = resSearch.value.trim().toLowerCase();
+      document.querySelectorAll('.res-link').forEach(function (el) {
+        el.style.display = el.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+      });
+      document.querySelectorAll('.note-card').forEach(function (el) {
+        el.style.display = el.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+
+    /* ---- Board filter chips + search ---- */
+    var filterChips = document.querySelectorAll('.filter-chip');
+    var boardSearch = document.getElementById('board-search');
+
+    function resetBoardControls() {
+      filterChips.forEach(function (c) { c.classList.toggle('is-active', c.getAttribute('data-filter') === 'all'); });
+      boardSearch.value = '';
+      applyBoardFilters();
+    }
+
+    function applyBoardFilters() {
+      var visibleBoard = document.querySelector('.board:not([hidden])');
+      if (!visibleBoard) return;
+      var activeChip = document.querySelector('.filter-chip.is-active');
+      var activeFilter = activeChip ? activeChip.getAttribute('data-filter') : 'all';
+      var q = boardSearch.value.trim().toLowerCase();
+
+      visibleBoard.querySelectorAll('.column').forEach(function (column) {
+        var cards = column.querySelectorAll('.card');
+        var visibleCount = 0;
+        cards.forEach(function (card) {
+          var assignee = card.getAttribute('data-assignee');
+          var matchesFilter = activeFilter === 'all' || (activeFilter === 'mine' ? assignee === currentUser : assignee === activeFilter);
+          var title = (card.getAttribute('data-title') || '').toLowerCase();
+          var matchesSearch = q === '' || title.indexOf(q) !== -1;
+          var show = matchesFilter && matchesSearch;
+          card.style.display = show ? '' : 'none';
+          if (show) visibleCount++;
+        });
+        var countBadge = column.querySelector('.column-count');
+        if (countBadge) countBadge.textContent = String(visibleCount);
+        var hint = column.querySelector(':scope > .column-empty-hint');
+        var staticEmpty = column.querySelector(':scope > .column-empty');
+        if (!staticEmpty) {
+          var dynamicHint = column.querySelector('.column-empty-hint-inline');
+          if (cards.length > 0 && visibleCount === 0) {
+            if (!dynamicHint) {
+              dynamicHint = document.createElement('p');
+              dynamicHint.className = 'column-empty-hint column-empty-hint-inline is-visible';
+              dynamicHint.textContent = 'No matching cards.';
+              column.appendChild(dynamicHint);
+            }
+            dynamicHint.classList.add('is-visible');
+          } else if (dynamicHint) {
+            dynamicHint.classList.remove('is-visible');
+          }
+        }
+      });
+    }
+
+    filterChips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        filterChips.forEach(function (c) { c.classList.remove('is-active'); });
+        chip.classList.add('is-active');
+        applyBoardFilters();
+      });
+    });
+    boardSearch.addEventListener('input', applyBoardFilters);
+
+    /* ---- Viewing-as switcher ---- */
+    var teamAvatars = document.querySelectorAll('#team-avatars .avatar');
+    var homeViewer = document.getElementById('home-viewer');
+    var mineChipAvatar = document.getElementById('mine-chip-avatar');
+
+    function setViewer(code) {
+      currentUser = code;
+      teamAvatars.forEach(function (a) { a.classList.toggle('is-viewing', a.getAttribute('data-code') === code); });
+      homeViewer.textContent = AVATAR_NAMES[code];
+      mineChipAvatar.style.setProperty('--c', AVATAR_COLORS[code]);
+      mineChipAvatar.textContent = code;
+      renderMyCards();
+      var activeChip = document.querySelector('.filter-chip.is-active');
+      if (activeChip && activeChip.getAttribute('data-filter') === 'mine') applyBoardFilters();
+    }
+
+    teamAvatars.forEach(function (av) {
+      av.addEventListener('click', function () { setViewer(av.getAttribute('data-code')); });
+    });
+
+    /* ---- Home: My open cards ---- */
+    function renderMyCards() {
+      var list = document.getElementById('my-cards-list');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-assignee="' + currentUser + '"]'));
+      cards = cards.filter(function (c) {
+        var col = c.getAttribute('data-column');
+        return col !== 'Done' && col !== 'Released';
+      });
+      list.innerHTML = '';
+      if (cards.length === 0) {
+        var empty = document.createElement('li');
+        empty.className = 'list-item';
+        empty.style.color = 'var(--mist-dim)';
+        empty.textContent = 'Nothing open right now — nice.';
+        list.appendChild(empty);
+        return;
+      }
+      cards.slice(0, 6).forEach(function (card) {
+        var li = document.createElement('li');
+        li.className = 'list-item';
+        var due = card.getAttribute('data-due');
+        li.innerHTML =
+          '<span class="src-tag src-' + card.getAttribute('data-board').toLowerCase() + '">' + card.getAttribute('data-board') + '</span> ' +
+          card.getAttribute('data-title') +
+          (due ? '<time>' + due + '</time>' : '');
+        list.appendChild(li);
+      });
+    }
+
+    /* ---- Home: Due soon (derived from every card with a due date) ---- */
+    function renderDueSoon() {
+      var list = document.getElementById('due-soon-list');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-due]'));
+      cards.sort(function (a, b) {
+        return (DUE_ORDER[a.getAttribute('data-due')] || 99) - (DUE_ORDER[b.getAttribute('data-due')] || 99);
+      });
+      list.innerHTML = '';
+      cards.slice(0, 5).forEach(function (card) {
+        var li = document.createElement('li');
+        li.className = 'list-item';
+        li.innerHTML =
+          '<span class="list-marker due">!</span>' +
+          '<span class="src-tag src-' + card.getAttribute('data-board').toLowerCase() + '">' + card.getAttribute('data-board') + '</span> ' +
+          card.getAttribute('data-title') +
+          '<time>' + card.getAttribute('data-due') + '</time>';
+        list.appendChild(li);
+      });
+    }
+
+    /* ---- Card detail drawer ---- */
+    var drawer = document.getElementById('drawer');
+    var drawerBackdrop = document.getElementById('drawer-backdrop');
+
+    function priorityPillClass(p) {
+      if (p === 'High') return 'bad';
+      if (p === 'Medium') return 'warn';
+      return 'pending';
+    }
+
+    function openDrawer(card) {
+      document.getElementById('drawer-board').textContent = card.getAttribute('data-board') + ' · ' + card.getAttribute('data-column');
+      document.getElementById('drawer-title').textContent = card.getAttribute('data-title');
+      var priority = card.getAttribute('data-priority');
+      var priorityEl = document.getElementById('drawer-priority');
+      priorityEl.textContent = priority;
+      priorityEl.className = 'pill ' + priorityPillClass(priority);
+      var assignee = card.getAttribute('data-assignee');
+      var avatarEl = document.getElementById('drawer-assignee-avatar');
+      avatarEl.textContent = assignee;
+      avatarEl.style.setProperty('--c', AVATAR_COLORS[assignee]);
+      document.getElementById('drawer-assignee-name').textContent = card.getAttribute('data-assignee-name');
+      var due = card.getAttribute('data-due');
+      document.getElementById('drawer-due').textContent = due ? 'Due ' + due : 'No due date';
+      document.getElementById('drawer-desc').textContent = card.getAttribute('data-desc') || '';
+      document.getElementById('drawer-meta').textContent = 'Added by ' + card.getAttribute('data-created-by') + ' · ' + card.getAttribute('data-created');
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      drawerBackdrop.classList.add('is-open');
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      drawerBackdrop.classList.remove('is-open');
+    }
+
+    document.addEventListener('click', function (e) {
+      var card = e.target.closest('.card');
+      if (card) { openDrawer(card); return; }
+    });
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+
+    /* ---- Init ---- */
+    showBoard('tasks');
+    renderMyCards();
+    renderDueSoon();
+  })();
+</script>
