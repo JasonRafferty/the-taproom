@@ -75,7 +75,10 @@
   }
 
   .rail-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
-  .rail-mark { font-size: 22px; line-height: 1; }
+  .rail-mark {
+    width: 34px; height: 34px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
+    padding: 5px; object-fit: contain; flex: none;
+  }
   .rail-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: 0.03em; text-transform: uppercase; }
   .rail-sub { font-size: 12px; color: var(--mist); margin-top: 2px; }
 
@@ -141,14 +144,79 @@
   /* ---------- Home: quick capture ---------- */
   .capture-panel {
     background: var(--surface); border: 1px solid var(--accent-2); border-radius: var(--radius);
-    padding: 18px 20px; margin-bottom: 18px;
+    padding: 14px 16px; margin-bottom: 16px;
+    display: grid; grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr); gap: 14px; align-items: end;
   }
   .capture-panel h2 { color: var(--ink); font-size: 15px; text-transform: none; letter-spacing: 0; margin-bottom: 4px; }
-  .capture-panel .panel-note { margin-top: 0; margin-bottom: 14px; }
+  .capture-panel .panel-note { margin-top: 0; margin-bottom: 0; }
   .capture-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .capture-input { flex: 1 1 260px; background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: var(--radius); padding: 10px 13px; font-size: 13.5px; }
   .capture-input::placeholder { color: var(--mist-dim); }
   .capture-select { background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: var(--radius); padding: 10px 12px; font-size: 13.5px; }
+  @media (max-width: 860px) { .capture-panel { grid-template-columns: 1fr; align-items: stretch; } }
+
+  .home-showcase { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr); gap: 16px; align-items: stretch; }
+  @media (max-width: 980px) { .home-showcase { grid-template-columns: 1fr; } }
+
+  .fun-panel {
+    min-height: 340px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    background:
+      linear-gradient(120deg, rgba(208,255,20,0.08), transparent 36%),
+      linear-gradient(300deg, rgba(108,36,76,0.28), transparent 38%),
+      linear-gradient(145deg, #202327 0%, #17191b 100%);
+    position: relative;
+  }
+  .logo-stage {
+    position: absolute; inset: 20px 20px 74px; display: grid; place-items: center;
+  }
+  .logo-ring {
+    position: absolute; width: min(72%, 300px); aspect-ratio: 1; border-radius: 50%;
+    border: 1px solid rgba(208,255,20,0.28); border-top-color: var(--accent); border-right-color: rgba(108,36,76,0.8);
+    box-shadow: inset 0 0 34px rgba(208,255,20,0.07), 0 0 52px rgba(208,255,20,0.1);
+  }
+  .logo-ring.is-inner {
+    width: min(52%, 216px); border-color: rgba(255,255,255,0.13); border-bottom-color: var(--accent-2);
+  }
+  .siply-logo-hero {
+    width: min(44%, 178px); position: relative; z-index: 2;
+    filter: drop-shadow(0 18px 38px rgba(0,0,0,0.48)) drop-shadow(0 0 26px rgba(208,255,20,0.2));
+  }
+  .logo-tick {
+    position: absolute; width: 42px; height: 5px; border-radius: 999px; background: var(--accent);
+    box-shadow: 0 0 18px rgba(208,255,20,0.42);
+  }
+  .logo-tick.tick-a { --r: 28deg; top: 17%; left: 21%; transform: rotate(var(--r)); }
+  .logo-tick.tick-b { --r: -32deg; top: 25%; right: 19%; transform: rotate(var(--r)); background: #e03f87; box-shadow: 0 0 18px rgba(224,63,135,0.38); }
+  .logo-tick.tick-c { --r: -18deg; bottom: 19%; left: 24%; transform: rotate(var(--r)); background: #f2b84b; box-shadow: 0 0 18px rgba(242,184,75,0.32); }
+  .logo-tick.tick-d { --r: 20deg; bottom: 25%; right: 23%; transform: rotate(var(--r)); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .siply-logo-hero { animation: logo-float 4.4s ease-in-out infinite; }
+    .logo-ring { animation: logo-spin 16s linear infinite; }
+    .logo-ring.is-inner { animation-duration: 11s; animation-direction: reverse; }
+    .logo-tick { animation: tick-pop 2.8s ease-in-out infinite; }
+    .logo-tick.tick-b { animation-delay: 0.35s; }
+    .logo-tick.tick-c { animation-delay: 0.7s; }
+    .logo-tick.tick-d { animation-delay: 1.05s; }
+  }
+  @keyframes logo-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.025); }
+  }
+  @keyframes logo-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes tick-pop {
+    0%, 100% { opacity: 0.45; transform: translateY(0) scaleX(0.82) rotate(var(--r, 0deg)); }
+    50% { opacity: 1; transform: translateY(-4px) scaleX(1) rotate(var(--r, 0deg)); }
+  }
+  .fun-copy {
+    position: absolute; left: 18px; right: 18px; bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .fun-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mist); }
+  .fun-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; text-transform: uppercase; line-height: 1.05; }
+  .fun-chip { background: rgba(26,26,26,0.74); border: 1px solid rgba(255,255,255,0.12); color: var(--accent); border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
 
   /* ---------- Home: recap line ---------- */
   .home-recap { font-size: 13px; color: var(--good); margin: -6px 0 22px; }
@@ -159,26 +227,59 @@
   .panel-head-row h2 { margin-bottom: 0; }
   .panel-count { color: var(--mist-dim); font-weight: 600; text-transform: none; letter-spacing: 0; }
 
-  .scope-toggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 2px; gap: 2px; flex: none; }
-  .scope-btn { background: none; border: none; color: var(--mist); font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
-  .scope-btn:hover { color: var(--ink); }
-  .scope-btn.is-active { background: var(--accent-2-soft); color: var(--ink); }
-
-  /* ---------- Due / my-cards / what's-next lists ---------- */
+  /* ---------- Compact lists ---------- */
   .list { display: flex; flex-direction: column; gap: 10px; }
   .list-item { display: flex; align-items: center; gap: 8px; font-size: 13.5px; flex-wrap: wrap; }
   .list-item[data-title] { cursor: pointer; padding: 6px 8px; margin: -6px -8px; border-radius: 8px; }
   .list-item[data-title]:hover { background: var(--card-hover); }
   .list-item .avatar { width: 20px; height: 20px; font-size: 9px; cursor: inherit; }
-  .list-item-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
   .list-item time { font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .list-item time.is-today { color: var(--warn); font-weight: 700; }
   .list-empty { color: var(--mist-dim); }
 
-  .src-tag { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 5px; flex: none; }
-  .src-tag.src-bugs { background: var(--bad-soft); color: var(--bad); }
-  .src-tag.src-features { background: var(--accent-2-soft); color: #e39dc0; }
-  .src-tag.src-tasks { background: var(--pending-soft); color: var(--mist); }
+  /* ---------- Home: decisions ---------- */
+  .decision-list { display: flex; flex-direction: column; gap: 10px; }
+  .decision-panel { min-width: 0; }
+  .decision-panel .panel-head-row { align-items: center; }
+  .decision-item {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--warn);
+    border-radius: 8px; padding: 13px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px; align-items: start;
+  }
+  .decision-item.is-resolved { border-left-color: var(--good); opacity: 0.72; }
+  .decision-title { font-size: 13.5px; font-weight: 700; margin-bottom: 3px; }
+  .decision-meta { font-size: 12px; color: var(--mist); line-height: 1.45; }
+  .decision-side { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .decision-status { margin-top: 1px; white-space: nowrap; }
+  .decision-actions { display: flex; gap: 5px; }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+    border: 1px solid var(--line); background: var(--surface); color: var(--mist); cursor: pointer; padding: 0;
+  }
+  .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .icon-btn.is-danger:hover { color: var(--bad); border-color: var(--bad); }
+  .decision-form {
+    display: none; background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; margin-bottom: 12px; gap: 9px;
+  }
+  .decision-form.is-open { display: grid; }
+  .decision-form-grid { display: grid; grid-template-columns: minmax(0, 1fr) 120px 120px; gap: 8px; }
+  .decision-input, .decision-select, .decision-textarea {
+    background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 8px;
+    padding: 9px 10px; font-size: 13px;
+  }
+  .decision-textarea { min-height: 70px; resize: vertical; }
+  .decision-form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .btn-secondary {
+    background: var(--card); color: var(--mist); border: 1px solid var(--line); padding: 8px 12px;
+    border-radius: 8px; font-weight: 700; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-secondary:hover { color: var(--ink); border-color: #454a51; }
+  @media (max-width: 680px) {
+    .decision-item { grid-template-columns: 1fr; }
+    .decision-side { align-items: flex-start; }
+    .decision-form-grid { grid-template-columns: 1fr; }
+  }
 
   /* ---------- Board toolbar ---------- */
   .board-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -279,7 +380,7 @@
   .note-preview { font-size: 13px; color: var(--mist); line-height: 1.55; margin-bottom: 12px; }
   .note-foot { font-size: 11.5px; color: var(--mist-dim); display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 
-  /* ---------- Environments ---------- */
+  /* ---------- Deployments ---------- */
   .env-cards { display: flex; flex-direction: column; gap: 10px; }
   .env-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px 17px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
   .env-name { font-weight: 700; font-size: 14.5px; }
@@ -291,6 +392,25 @@
   .pill.bad { background: var(--bad-soft); color: var(--bad); }
   .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .env-meta { font-size: 12px; color: var(--mist); font-variant-numeric: tabular-nums; }
+
+  .deploy-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+  @media (max-width: 980px) { .deploy-grid { grid-template-columns: 1fr; } }
+  .deploy-list { display: flex; flex-direction: column; gap: 10px; }
+  .deploy-item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 15px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: start;
+  }
+  .deploy-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+  .deploy-title { font-size: 14px; font-weight: 700; }
+  .deploy-meta { font-size: 12px; color: var(--mist); line-height: 1.5; }
+  .deploy-sha { font-family: var(--font-mono); color: var(--ink); }
+  .deploy-time { font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .change-list { display: flex; flex-direction: column; gap: 9px; }
+  .change-item { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--mist); }
+  .change-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex: none; }
+  .check-list { display: flex; flex-direction: column; gap: 9px; }
+  .check-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--mist); }
+  .check-item span:first-child { color: var(--ink); }
 
   /* ---------- Usage / stat tiles ---------- */
   .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
@@ -382,7 +502,7 @@
 <div class="app">
   <aside class="rail" aria-label="Primary navigation">
     <div class="rail-brand">
-      <span class="rail-mark" aria-hidden="true">🍻</span>
+      <img class="rail-mark" src="assets/siply-logo-rating.png" alt="" aria-hidden="true">
       <div>
         <p class="rail-name">The&nbsp;Taproom</p>
         <p class="rail-sub">Siply internal hub</p>
@@ -418,9 +538,9 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3.2C3 2.9 3.3 2.7 3.6 2.8c1.5.4 3 1.1 4.4 2 1.4-.9 2.9-1.6 4.4-2 .3-.1.6.1.6.4v9c0 .2-.2.4-.4.5-1.5.4-2.9 1-4.2 1.9a.6.6 0 01-.8 0c-1.3-.9-2.7-1.5-4.2-1.9-.2-.1-.4-.3-.4-.5v-9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 4.8V13.6" stroke="currentColor" stroke-width="1.3"/></svg>
           Resources
         </button>
-        <button class="rail-link" data-view="environments" type="button">
+        <button class="rail-link" data-view="deployments" type="button">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="6.8" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="11.1" width="11" height="3.4" rx="1" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="4.2" r="0.6" fill="currentColor"/><circle cx="4.6" cy="8.5" r="0.6" fill="currentColor"/><circle cx="4.6" cy="12.8" r="0.6" fill="currentColor"/></svg>
-          Environments
+          Deployments
         </button>
         <button class="rail-link" data-view="usage" type="button">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 13.5V3M2.5 13.5H13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="5" y="8.5" width="2" height="4" fill="currentColor"/><rect x="8.2" y="6" width="2" height="6.5" fill="currentColor"/><rect x="11.4" y="4" width="2" height="8.5" fill="currentColor"/></svg>
@@ -451,33 +571,120 @@
           <h1>Morning, crew</h1>
         </div>
       </header>
-      <p class="page-purpose">Start here — capture what's on your mind, see what's yours, see what's due.</p>
+      <p class="page-purpose">Start here — capture what's on your mind and keep the important decisions moving.</p>
       <p class="home-recap" id="home-recap" hidden></p>
 
       <div class="capture-panel">
-        <h2>Got something on your mind?</h2>
-        <p class="panel-note">Drop it here — it lands on the right board so it's never just lost in a WhatsApp thread. Press <strong>/</strong> to jump straight here.</p>
+        <div>
+          <h2>Got something on your mind?</h2>
+          <p class="panel-note">Capture it before it disappears. Press <strong>/</strong> to jump here.</p>
+        </div>
         <div class="capture-row">
           <input class="capture-input" id="capture-input" type="text" placeholder="e.g. Map pins overlap when zoomed in on Manchester">
-          <select class="capture-select">
+          <select class="capture-select" id="capture-type" aria-label="Card type">
             <option>Feature idea</option>
             <option>Bug</option>
             <option>Task</option>
           </select>
-          <button class="btn-primary" type="button">Add card</button>
+          <button class="btn-primary" id="capture-add" type="button">Add card</button>
         </div>
       </div>
 
-      <section class="panel">
-        <div class="panel-head-row">
-          <h2>What's next <span class="panel-count" id="whats-next-count"></span></h2>
-          <div class="scope-toggle" id="whats-next-toggle">
-            <button class="scope-btn is-active" data-scope="mine" type="button">Mine</button>
-            <button class="scope-btn" data-scope="everyone" type="button">Everyone</button>
+      <div class="home-showcase">
+        <section class="panel decision-panel">
+          <div class="panel-head-row">
+            <h2>Decisions needed <span class="panel-count" id="decision-count">· 3</span></h2>
+            <button class="btn-secondary" id="decision-new" type="button">+ New</button>
           </div>
-        </div>
-        <ul class="list" id="whats-next-list"></ul>
-      </section>
+
+          <form class="decision-form" id="decision-form">
+            <div class="decision-form-grid">
+              <input class="decision-input" id="decision-title-input" type="text" placeholder="Decision title" aria-label="Decision title">
+              <select class="decision-select" id="decision-owner-input" aria-label="Decision owner">
+                <option value="AM">Ashoka</option>
+                <option value="AK">Anulome</option>
+                <option value="AR">Arvin</option>
+                <option value="JR">Jason</option>
+              </select>
+              <select class="decision-select" id="decision-status-input" aria-label="Decision status">
+                <option value="Open">Open</option>
+                <option value="Discuss">Discuss</option>
+                <option value="Blocking">Blocking</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+            <textarea class="decision-textarea" id="decision-note-input" placeholder="What needs deciding?" aria-label="Decision note"></textarea>
+            <div class="decision-form-actions">
+              <button class="btn-secondary" id="decision-cancel" type="button">Cancel</button>
+              <button class="btn-primary" type="submit">Save decision</button>
+            </div>
+          </form>
+
+          <div class="decision-list" id="decision-list">
+            <article class="decision-item" data-title="Hosting route for the first live users" data-owner="AK" data-status="Discuss" data-note="Decide whether Taproom stays on Vercel/Neon free tier or moves to a small VPS before Test setup.">
+              <div>
+                <p class="decision-title">Hosting route for the first live users</p>
+                <p class="decision-meta">Owner: Anulome · Decide whether Taproom stays on Vercel/Neon free tier or moves to a small VPS before Test setup.</p>
+              </div>
+              <div class="decision-side">
+                <span class="pill warn decision-status">Discuss</span>
+                <div class="decision-actions">
+                  <button class="icon-btn" data-action="edit" type="button" aria-label="Edit decision">✎</button>
+                  <button class="icon-btn" data-action="resolve" type="button" aria-label="Resolve decision">✓</button>
+                  <button class="icon-btn is-danger" data-action="delete" type="button" aria-label="Delete decision">×</button>
+                </div>
+              </div>
+            </article>
+            <article class="decision-item" data-title="Company registration and share split" data-owner="AM" data-status="Blocking" data-note="Confirm the director/share structure before the legal call turns into implementation work.">
+              <div>
+                <p class="decision-title">Company registration and share split</p>
+                <p class="decision-meta">Owner: Ashoka · Confirm the director/share structure before the legal call turns into implementation work.</p>
+              </div>
+              <div class="decision-side">
+                <span class="pill bad decision-status">Blocking</span>
+                <div class="decision-actions">
+                  <button class="icon-btn" data-action="edit" type="button" aria-label="Edit decision">✎</button>
+                  <button class="icon-btn" data-action="resolve" type="button" aria-label="Resolve decision">✓</button>
+                  <button class="icon-btn is-danger" data-action="delete" type="button" aria-label="Delete decision">×</button>
+                </div>
+              </div>
+            </article>
+            <article class="decision-item" data-title="What qualifies as launch-ready for Test?" data-owner="JR" data-status="Open" data-note="Agree the minimum checks before Features and Bugs can move into the release lane.">
+              <div>
+                <p class="decision-title">What qualifies as launch-ready for Test?</p>
+                <p class="decision-meta">Owner: Jason · Agree the minimum checks before Features and Bugs can move into the release lane.</p>
+              </div>
+              <div class="decision-side">
+                <span class="pill pending decision-status">Open</span>
+                <div class="decision-actions">
+                  <button class="icon-btn" data-action="edit" type="button" aria-label="Edit decision">✎</button>
+                  <button class="icon-btn" data-action="resolve" type="button" aria-label="Resolve decision">✓</button>
+                  <button class="icon-btn is-danger" data-action="delete" type="button" aria-label="Delete decision">×</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="fun-panel" aria-label="Animated Siply logo">
+          <div class="logo-stage" aria-hidden="true">
+            <span class="logo-ring"></span>
+            <span class="logo-ring is-inner"></span>
+            <span class="logo-tick tick-a"></span>
+            <span class="logo-tick tick-b"></span>
+            <span class="logo-tick tick-c"></span>
+            <span class="logo-tick tick-d"></span>
+            <img class="siply-logo-hero" src="assets/siply-logo-rating.png" alt="">
+          </div>
+          <div class="fun-copy">
+            <div>
+              <p class="fun-kicker">Siply HQ</p>
+              <p class="fun-title">Keep it moving</p>
+            </div>
+            <span class="fun-chip">3 decisions on tap</span>
+          </div>
+        </section>
+      </div>
     </section>
 
     <!-- ================= BOARD ================= -->
@@ -487,7 +694,7 @@
           <p class="eyebrow" id="board-eyebrow">Board</p>
           <h1 id="board-title">Tasks</h1>
         </div>
-        <button class="btn-primary" type="button">+ New card</button>
+        <button class="btn-primary" id="board-new-card" type="button">+ New card</button>
       </header>
       <p class="page-purpose" id="board-purpose">Everything else — admin, legal, funding, marketing, ops.</p>
 
@@ -750,31 +957,73 @@
       </div>
     </section>
 
-    <!-- ================= ENVIRONMENTS ================= -->
-    <section id="view-environments" class="view">
+    <!-- ================= DEPLOYMENTS ================= -->
+    <section id="view-deployments" class="view">
       <header class="page-head">
         <div>
           <p class="eyebrow">Infrastructure</p>
-          <h1>Environments</h1>
+          <h1>Deployments</h1>
         </div>
       </header>
-      <p class="page-purpose">Where the Siply product itself is deployed — separate from any of the tools above.</p>
+      <p class="page-purpose">Where Siply is running, what last changed, and whether the next release is ready.</p>
+
+      <div class="deploy-grid">
+        <section class="panel">
+          <h2>Environment status</h2>
+          <div class="env-cards">
+            <div class="env-card">
+              <div><p class="env-name">Test</p><p class="env-url">staging.siply.app</p></div>
+              <span class="pill warn">Setting up</span>
+              <p class="env-meta">Last check: pending</p>
+            </div>
+            <div class="env-card">
+              <div><p class="env-name">Production</p><p class="env-url">app.siply.app</p></div>
+              <span class="pill pending">Not started</span>
+              <p class="env-meta">Planned after Test soaks</p>
+            </div>
+          </div>
+          <p class="panel-note">Status can come from a small health-check endpoint; deploy data can come from CI or a deployment webhook.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Release readiness</h2>
+          <ul class="check-list">
+            <li class="check-item"><span>Test environment online</span><span class="pill warn">Waiting</span></li>
+            <li class="check-item"><span>Critical bugs clear</span><span class="pill bad">2 open</span></li>
+            <li class="check-item"><span>GDPR export checked</span><span class="pill warn">Retest</span></li>
+            <li class="check-item"><span>Rollback target available</span><span class="pill pending">None yet</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="panel" style="margin-bottom:16px;">
+        <h2>Latest deploys</h2>
+        <div class="deploy-list">
+          <article class="deploy-item">
+            <div>
+              <div class="deploy-title-row"><p class="deploy-title">Test</p><span class="pill warn">First deploy pending</span></div>
+              <p class="deploy-meta">Target branch <span class="deploy-sha">main</span> · GitHub Actions will attach commit, author, and compare link.</p>
+            </div>
+            <time class="deploy-time">Queued after setup</time>
+          </article>
+          <article class="deploy-item">
+            <div>
+              <div class="deploy-title-row"><p class="deploy-title">Production</p><span class="pill pending">Not deployed</span></div>
+              <p class="deploy-meta">Production release waits for Test soak, launch sign-off, and a rollback target.</p>
+            </div>
+            <time class="deploy-time">No release yet</time>
+          </article>
+        </div>
+        <p class="panel-note">GitHub tokens stay server-side; the page should read a prepared deployment summary rather than calling GitHub directly from the browser.</p>
+      </section>
 
       <section class="panel">
-        <h2>Siply environments</h2>
-        <div class="env-cards">
-          <div class="env-card">
-            <div><p class="env-name">Test</p><p class="env-url">staging.siply.app</p></div>
-            <span class="pill warn">Setting up</span>
-            <p class="env-meta">No deploys yet</p>
-          </div>
-          <div class="env-card">
-            <div><p class="env-name">Production</p><p class="env-url">app.siply.app</p></div>
-            <span class="pill pending">Not started</span>
-            <p class="env-meta">Planned after Test soaks</p>
-          </div>
-        </div>
-        <p class="panel-note">Once Test and Prod are live, this panel can pull real uptime, response time, and last-deploy timestamps from a health-check endpoint — a natural v2 addition, no new subsystem required.</p>
+        <h2>Changes queued for Test</h2>
+        <ul class="change-list">
+          <li class="change-item"><span class="change-dot"></span><span>Map of Drinks — price/rating legend from Features.</span></li>
+          <li class="change-item"><span class="change-dot"></span><span>Achievements &amp; streaks ready for QA.</span></li>
+          <li class="change-item"><span class="change-dot"></span><span>GDPR export fix still blocked by liked/commented posts.</span></li>
+        </ul>
       </section>
     </section>
 
@@ -870,8 +1119,9 @@
   (function () {
     var AVATAR_COLORS = { AM: '#D0FF14', AK: '#6C244C', AR: '#F2B84B', JR: '#6FCF97' };
     var AVATAR_NAMES = { AM: 'Ashoka', AK: 'Anulome', AR: 'Arvin', JR: 'Jason' };
-    var DUE_ORDER = { Today: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 };
+    var AVATAR_FULL_NAMES = { AM: 'Ashoka Mullassery', AK: 'Anulome Kishore', AR: 'Arvin Razavi', JR: 'Jason Rafferty' };
     var currentUser = 'JR';
+    var activeBoardKey = 'tasks';
 
     /* ---- Nav / view switching ---- */
     var railLinks = document.querySelectorAll('.rail-link');
@@ -890,6 +1140,7 @@
     }
 
     function showBoard(key) {
+      activeBoardKey = key;
       boards.forEach(function (b) { b.hidden = b.id !== 'board-' + key; });
       boardTitle.textContent = boardInfo[key].label;
       boardPurpose.textContent = boardInfo[key].purpose;
@@ -1023,7 +1274,6 @@
       homeViewer.textContent = AVATAR_NAMES[code];
       mineChipAvatar.style.setProperty('--c', AVATAR_COLORS[code]);
       mineChipAvatar.textContent = code;
-      setWhatsNextScope('mine');
       var activeChip = document.querySelector('.filter-chip.is-active');
       if (activeChip && activeChip.getAttribute('data-filter') === 'mine') applyBoardFilters();
     }
@@ -1062,72 +1312,11 @@
       recapEl.textContent = '🎉 ' + done[0].getAttribute('data-title') + ' shipped ' + done[0].getAttribute('data-created');
     }
 
-    /* ---- Home: What's next (merged my-cards + due-soon, derived, scoped Mine/Everyone) ---- */
-    var whatsNextScope = 'mine';
-    var whatsNextToggle = document.getElementById('whats-next-toggle');
-
-    function setWhatsNextScope(scope) {
-      whatsNextScope = scope;
-      whatsNextToggle.querySelectorAll('.scope-btn').forEach(function (btn) {
-        btn.classList.toggle('is-active', btn.getAttribute('data-scope') === scope);
-      });
-      renderWhatsNext();
-    }
-
-    whatsNextToggle.addEventListener('click', function (e) {
-      var btn = e.target.closest('.scope-btn');
-      if (btn) setWhatsNextScope(btn.getAttribute('data-scope'));
-    });
-
-    function renderWhatsNext() {
-      var list = document.getElementById('whats-next-list');
-      var countEl = document.getElementById('whats-next-count');
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.card')).filter(function (c) {
-        var col = c.getAttribute('data-column');
-        if (col === 'Done' || col === 'Released') return false;
-        return whatsNextScope === 'everyone' || c.getAttribute('data-assignee') === currentUser;
-      });
-      cards.sort(function (a, b) {
-        var da = DUE_ORDER[a.getAttribute('data-due')];
-        var db = DUE_ORDER[b.getAttribute('data-due')];
-        return (da === undefined ? 99 : da) - (db === undefined ? 99 : db);
-      });
-
-      list.innerHTML = '';
-      countEl.textContent = cards.length ? '· ' + cards.length : '';
-
-      if (cards.length === 0) {
-        var empty = document.createElement('li');
-        empty.className = 'list-item list-empty';
-        empty.textContent = whatsNextScope === 'mine' ? 'Nothing open right now — nice.' : 'Nothing open on any board right now.';
-        list.appendChild(empty);
-        return;
-      }
-
-      cards.slice(0, 8).forEach(function (card) {
-        var li = document.createElement('li');
-        li.className = 'list-item';
-        li._sourceCard = card;
-        var due = card.getAttribute('data-due');
-        var assignee = card.getAttribute('data-assignee');
-        var right = '';
-        if (due) right += '<time class="' + (due === 'Today' ? 'is-today' : '') + '">' + due + '</time>';
-        if (whatsNextScope === 'everyone') right += '<span class="avatar" style="--c:' + AVATAR_COLORS[assignee] + '">' + assignee + '</span>';
-        li.innerHTML =
-          '<span class="src-tag src-' + card.getAttribute('data-board').toLowerCase() + '">' + card.getAttribute('data-board') + '</span> ' +
-          card.getAttribute('data-title') +
-          (right ? '<span class="list-item-right">' + right + '</span>' : '');
-        ['title', 'board', 'column', 'priority', 'assignee', 'assignee-name', 'due', 'desc', 'created-by', 'created'].forEach(function (attr) {
-          var val = card.getAttribute('data-' + attr);
-          if (val !== null) li.setAttribute('data-' + attr, val);
-        });
-        list.appendChild(li);
-      });
-    }
-
     /* ---- Home: quick capture helpers ---- */
     var captureInput = document.getElementById('capture-input');
-    var captureSelect = document.querySelector('.capture-select');
+    var captureSelect = document.getElementById('capture-type');
+    var captureAdd = document.getElementById('capture-add');
+    var boardNewCard = document.getElementById('board-new-card');
     var captureTypeManual = false;
 
     captureSelect.addEventListener('change', function () { captureTypeManual = true; });
@@ -1140,6 +1329,217 @@
         captureSelect.value = 'Bug';
       } else if (/\b(idea|feature|wish|would be nice|what if|could add)\b/.test(v)) {
         captureSelect.value = 'Feature idea';
+      }
+    });
+
+    function boardKeyFromCaptureType(type) {
+      if (type === 'Bug') return 'bugs';
+      if (type === 'Task') return 'tasks';
+      return 'features';
+    }
+
+    function createCard(boardKey, title, options) {
+      options = options || {};
+      var board = document.getElementById('board-' + boardKey);
+      var column = board ? board.querySelector('.column') : null;
+      if (!column) return null;
+
+      var card = document.createElement('div');
+      var priority = options.priority || 'Medium';
+      card.className = 'card pri-med';
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-title', title);
+      card.setAttribute('data-board', boardInfo[boardKey].label);
+      card.setAttribute('data-column', columnCanonicalName(column));
+      card.setAttribute('data-priority', priority);
+      card.setAttribute('data-assignee', currentUser);
+      card.setAttribute('data-assignee-name', AVATAR_FULL_NAMES[currentUser]);
+      card.setAttribute('data-desc', options.desc || '');
+      card.setAttribute('data-created-by', AVATAR_NAMES[currentUser]);
+      card.setAttribute('data-created', 'just now');
+
+      var titleEl = document.createElement('p');
+      titleEl.className = 'card-title';
+      titleEl.textContent = title;
+
+      var meta = document.createElement('div');
+      meta.className = 'card-meta';
+      var metaLeft = document.createElement('span');
+      metaLeft.className = 'card-meta-left';
+      var avatar = document.createElement('span');
+      avatar.className = 'avatar';
+      avatar.style.setProperty('--c', AVATAR_COLORS[currentUser]);
+      avatar.textContent = currentUser;
+      meta.appendChild(metaLeft);
+      meta.appendChild(avatar);
+
+      card.appendChild(titleEl);
+      card.appendChild(meta);
+
+      var emptyMsg = column.querySelector(':scope > .column-empty');
+      if (emptyMsg) emptyMsg.remove();
+      column.appendChild(card);
+      renderCardFace(card);
+      applyBoardFilters();
+      return card;
+    }
+
+    function addCaptureCard() {
+      var title = captureInput.value.trim();
+      if (!title) { captureInput.focus(); return; }
+      var card = createCard(boardKeyFromCaptureType(captureSelect.value), title);
+      if (!card) return;
+      captureInput.value = '';
+      captureSelect.value = 'Feature idea';
+      captureTypeManual = false;
+      captureInput.focus();
+    }
+
+    captureAdd.addEventListener('click', addCaptureCard);
+    captureInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') addCaptureCard();
+    });
+
+    boardNewCard.addEventListener('click', function () {
+      var card = createCard(activeBoardKey, 'Untitled ' + boardInfo[activeBoardKey].label.slice(0, -1).toLowerCase());
+      if (card) openModal(card);
+    });
+
+    /* ---- Home: decisions ---- */
+    var decisionList = document.getElementById('decision-list');
+    var decisionCount = document.getElementById('decision-count');
+    var decisionNew = document.getElementById('decision-new');
+    var decisionForm = document.getElementById('decision-form');
+    var decisionTitleInput = document.getElementById('decision-title-input');
+    var decisionOwnerInput = document.getElementById('decision-owner-input');
+    var decisionStatusInput = document.getElementById('decision-status-input');
+    var decisionNoteInput = document.getElementById('decision-note-input');
+    var decisionCancel = document.getElementById('decision-cancel');
+    var editingDecision = null;
+
+    function decisionStatusClass(status) {
+      if (status === 'Blocking') return 'bad';
+      if (status === 'Discuss') return 'warn';
+      if (status === 'Resolved') return 'good';
+      return 'pending';
+    }
+
+    function updateDecisionCount() {
+      var items = Array.prototype.slice.call(decisionList.querySelectorAll('.decision-item'));
+      var active = items.filter(function (item) { return item.getAttribute('data-status') !== 'Resolved'; }).length;
+      decisionCount.textContent = active ? '· ' + active + ' active' : '· clear';
+      var chip = document.querySelector('.fun-chip');
+      if (chip) chip.textContent = active ? active + ' decisions on tap' : 'All clear';
+    }
+
+    function refreshDecisionItem(item) {
+      var owner = item.getAttribute('data-owner');
+      var status = item.getAttribute('data-status');
+      item.querySelector('.decision-title').textContent = item.getAttribute('data-title');
+      item.querySelector('.decision-meta').textContent = 'Owner: ' + AVATAR_NAMES[owner] + ' · ' + item.getAttribute('data-note');
+      var pillEl = item.querySelector('.decision-status');
+      pillEl.className = 'pill decision-status ' + decisionStatusClass(status);
+      pillEl.textContent = status;
+      item.classList.toggle('is-resolved', status === 'Resolved');
+      item.querySelector('[data-action="resolve"]').setAttribute('aria-label', status === 'Resolved' ? 'Reopen decision' : 'Resolve decision');
+    }
+
+    function buildDecisionItem(title, owner, status, note) {
+      var item = document.createElement('article');
+      item.className = 'decision-item';
+      item.setAttribute('data-title', title);
+      item.setAttribute('data-owner', owner);
+      item.setAttribute('data-status', status);
+      item.setAttribute('data-note', note);
+
+      var main = document.createElement('div');
+      var titleEl = document.createElement('p');
+      titleEl.className = 'decision-title';
+      var meta = document.createElement('p');
+      meta.className = 'decision-meta';
+      main.appendChild(titleEl);
+      main.appendChild(meta);
+
+      var side = document.createElement('div');
+      side.className = 'decision-side';
+      var pillEl = document.createElement('span');
+      var actions = document.createElement('div');
+      actions.className = 'decision-actions';
+
+      [
+        { action: 'edit', label: 'Edit decision', text: '✎', danger: false },
+        { action: 'resolve', label: 'Resolve decision', text: '✓', danger: false },
+        { action: 'delete', label: 'Delete decision', text: '×', danger: true }
+      ].forEach(function (cfg) {
+        var btn = document.createElement('button');
+        btn.className = 'icon-btn' + (cfg.danger ? ' is-danger' : '');
+        btn.setAttribute('data-action', cfg.action);
+        btn.setAttribute('aria-label', cfg.label);
+        btn.type = 'button';
+        btn.textContent = cfg.text;
+        actions.appendChild(btn);
+      });
+
+      side.appendChild(pillEl);
+      side.appendChild(actions);
+      item.appendChild(main);
+      item.appendChild(side);
+      refreshDecisionItem(item);
+      return item;
+    }
+
+    function openDecisionForm(item) {
+      editingDecision = item || null;
+      decisionTitleInput.value = item ? item.getAttribute('data-title') : '';
+      decisionOwnerInput.value = item ? item.getAttribute('data-owner') : currentUser;
+      decisionStatusInput.value = item ? item.getAttribute('data-status') : 'Open';
+      decisionNoteInput.value = item ? item.getAttribute('data-note') : '';
+      decisionForm.classList.add('is-open');
+      decisionTitleInput.focus();
+    }
+
+    function closeDecisionForm() {
+      editingDecision = null;
+      decisionForm.reset();
+      decisionForm.classList.remove('is-open');
+    }
+
+    decisionNew.addEventListener('click', function () { openDecisionForm(null); });
+    decisionCancel.addEventListener('click', closeDecisionForm);
+
+    decisionForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var title = decisionTitleInput.value.trim();
+      var note = decisionNoteInput.value.trim();
+      if (!title) { decisionTitleInput.focus(); return; }
+      if (!note) note = 'No detail added yet.';
+
+      var item = editingDecision || buildDecisionItem(title, decisionOwnerInput.value, decisionStatusInput.value, note);
+      item.setAttribute('data-title', title);
+      item.setAttribute('data-owner', decisionOwnerInput.value);
+      item.setAttribute('data-status', decisionStatusInput.value);
+      item.setAttribute('data-note', note);
+      refreshDecisionItem(item);
+      if (!editingDecision) decisionList.prepend(item);
+      closeDecisionForm();
+      updateDecisionCount();
+    });
+
+    decisionList.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var item = btn.closest('.decision-item');
+      var action = btn.getAttribute('data-action');
+      if (action === 'edit') {
+        openDecisionForm(item);
+      } else if (action === 'resolve') {
+        item.setAttribute('data-status', item.getAttribute('data-status') === 'Resolved' ? 'Open' : 'Resolved');
+        refreshDecisionItem(item);
+        updateDecisionCount();
+      } else if (action === 'delete') {
+        if (editingDecision === item) closeDecisionForm();
+        item.remove();
+        updateDecisionCount();
       }
     });
 
@@ -1407,6 +1807,7 @@
     /* ---- Init ---- */
     showBoard('tasks');
     renderRecap();
-    renderWhatsNext();
+    decisionList.querySelectorAll('.decision-item').forEach(refreshDecisionItem);
+    updateDecisionCount();
   })();
 </script>
