@@ -61,7 +61,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .rail-link, .btn-primary, .chip, .card, .tab, .avatar, .filter-chip, .drawer, .drawer-backdrop {
+    .rail-link, .btn-primary, .chip, .card, .tab, .avatar, .filter-chip, .modal, .modal-backdrop {
       transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease, opacity 160ms ease;
     }
   }
@@ -303,28 +303,80 @@
   .bar { flex: 1; background: var(--accent-2); border-radius: 3px 3px 0 0; opacity: 0.55; }
   .bar.is-peak { background: var(--accent); opacity: 1; }
 
-  /* ---------- Card detail drawer ---------- */
-  .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 40; opacity: 0; pointer-events: none; }
-  .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  /* ---------- Card detail modal ---------- */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 40; opacity: 0; pointer-events: none; }
+  .modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
 
-  .drawer {
-    position: fixed; top: 0; right: 0; height: 100vh; width: 380px; max-width: 92vw;
-    background: var(--surface); border-left: 1px solid var(--line); z-index: 41;
-    transform: translateX(100%); padding: 24px 22px; overflow-y: auto;
+  .modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%);
+    width: 480px; max-width: 92vw; max-height: 86vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    z-index: 41; padding: 24px 26px 22px; opacity: 0; pointer-events: none;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
   }
-  .drawer.is-open { transform: translateX(0); }
-  .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
-  .drawer-eyebrow { font-size: 11.5px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
-  .drawer-close { background: var(--card); border: 1px solid var(--line); color: var(--mist); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 13px; flex: none; }
-  .drawer-close:hover { color: var(--ink); }
-  .drawer h3 { font-family: var(--font-display); font-size: 19px; font-weight: 800; letter-spacing: 0; text-transform: none; margin: 14px 0 6px; line-height: 1.3; }
-  .drawer-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13px; gap: 10px; }
-  .drawer-row:first-of-type { border-top: none; }
-  .drawer-label { color: var(--mist); flex: none; }
-  .drawer-assignee { display: flex; align-items: center; gap: 8px; }
-  .drawer-assignee .avatar { cursor: default; }
-  .drawer-desc { font-size: 13.5px; color: var(--mist); line-height: 1.6; margin: 16px 0 4px; }
-  .drawer-foot { font-size: 11.5px; color: var(--mist-dim); margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .modal.is-open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+  .modal::-webkit-scrollbar { width: 8px; }
+  .modal::-webkit-scrollbar-track { background: transparent; }
+  .modal::-webkit-scrollbar-thumb { background-color: var(--line); border-radius: 999px; border: 2px solid var(--surface); background-clip: padding-box; }
+
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .modal-eyebrow { font-size: 11.5px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+  .modal-close { background: var(--card); border: 1px solid var(--line); color: var(--mist); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 13px; flex: none; }
+  .modal-close:hover { color: var(--ink); }
+
+  .modal-title-input {
+    display: block; width: 100%; font-family: var(--font-display); font-size: 19px; font-weight: 800;
+    color: var(--ink); background: none; border: 1px solid transparent; border-radius: 6px;
+    margin: 14px 0 6px; padding: 4px 6px; line-height: 1.3;
+  }
+  .modal-title-input:hover { border-color: var(--line); }
+  .modal-title-input:focus { outline: none; border-color: var(--accent); background: var(--card); }
+
+  .modal-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13px; gap: 10px; }
+  .modal-row:first-of-type { border-top: none; }
+  .modal-label { color: var(--mist); flex: none; }
+
+  .modal-select {
+    background: var(--card); border: 1px solid var(--line); color: var(--ink); font-size: 13px; font-weight: 600;
+    padding: 6px 10px; border-radius: 8px; cursor: pointer;
+  }
+  .modal-select:hover { border-color: #454a51; }
+  .modal-select:focus { outline: none; border-color: var(--accent); }
+
+  .modal-desc-input {
+    width: 100%; background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--mist);
+    font-family: inherit; font-size: 13.5px; line-height: 1.6; padding: 10px 12px; margin: 16px 0 4px; resize: vertical;
+  }
+  .modal-desc-input:focus { outline: none; border-color: var(--accent); color: var(--ink); }
+  .modal-desc-input::placeholder { color: var(--mist-dim); }
+
+  .modal-foot { font-size: 11.5px; color: var(--mist-dim); margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+  /* ---------- Comments ---------- */
+  .modal-comments { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .modal-comments-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mist-dim); margin-bottom: 10px; }
+  .comment-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+  .comment-empty { font-size: 12.5px; color: var(--mist-dim); }
+  .comment-head { display: flex; align-items: center; gap: 8px; }
+  .comment-head .avatar { width: 22px; height: 22px; font-size: 9.5px; cursor: default; }
+  .comment-author { font-size: 12.5px; font-weight: 700; }
+  .comment-time { font-size: 11px; color: var(--mist-dim); flex: 1 1 auto; }
+  .comment-delete { background: none; border: none; color: var(--mist-dim); cursor: pointer; font-size: 11px; padding: 2px 4px; flex: none; }
+  .comment-delete:hover { color: var(--bad); }
+  .comment-text { font-size: 13px; color: var(--mist); line-height: 1.5; margin: 4px 0 0 30px; }
+
+  .comment-form { display: flex; flex-direction: column; gap: 8px; }
+  .comment-input {
+    width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 8px; color: var(--ink);
+    font-family: inherit; font-size: 13px; line-height: 1.5; padding: 9px 11px; resize: vertical;
+  }
+  .comment-input::placeholder { color: var(--mist-dim); }
+  .comment-input:focus { outline: none; border-color: var(--accent); }
+  .comment-post { align-self: flex-end; padding: 7px 16px; font-size: 12.5px; }
+
+  /* ---------- Drag and drop ---------- */
+  .card.is-dragging { opacity: 0.4; }
+  .column.is-drag-over { border-color: var(--accent); }
 </style>
 
 <div class="app">
@@ -765,19 +817,54 @@
   </main>
 </div>
 
-<div class="drawer-backdrop" id="drawer-backdrop"></div>
-<aside class="drawer" id="drawer" aria-label="Card details" aria-hidden="true">
-  <div class="drawer-head">
-    <p class="drawer-eyebrow" id="drawer-board">Board · Column</p>
-    <button class="drawer-close" id="drawer-close" type="button" aria-label="Close card details">✕</button>
+<div class="modal-backdrop" id="modal-backdrop"></div>
+<div class="modal" id="card-modal" role="dialog" aria-modal="true" aria-label="Card details" aria-hidden="true">
+  <div class="modal-head">
+    <p class="modal-eyebrow" id="modal-board">Board · Column</p>
+    <button class="modal-close" id="modal-close" type="button" aria-label="Close card details">✕</button>
   </div>
-  <h3 id="drawer-title">Card title</h3>
-  <div class="drawer-row"><span class="drawer-label">Priority</span><span class="pill" id="drawer-priority">Medium</span></div>
-  <div class="drawer-row"><span class="drawer-label">Assignee</span><span class="drawer-assignee"><span class="avatar" id="drawer-assignee-avatar">AK</span><span id="drawer-assignee-name">Anulome</span></span></div>
-  <div class="drawer-row"><span class="drawer-label">Due</span><span id="drawer-due">No due date</span></div>
-  <p class="drawer-desc" id="drawer-desc">Description…</p>
-  <p class="drawer-foot" id="drawer-meta">Added by — · —</p>
-</aside>
+  <input class="modal-title-input" id="modal-title" type="text" aria-label="Card title">
+  <div class="modal-row">
+    <span class="modal-label">Priority</span>
+    <select class="modal-select" id="modal-priority" aria-label="Priority">
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
+    </select>
+  </div>
+  <div class="modal-row">
+    <span class="modal-label">Assignee</span>
+    <select class="modal-select" id="modal-assignee" aria-label="Assignee">
+      <option value="AM">Ashoka Mullassery</option>
+      <option value="AK">Anulome Kishore</option>
+      <option value="AR">Arvin Razavi</option>
+      <option value="JR">Jason Rafferty</option>
+    </select>
+  </div>
+  <div class="modal-row">
+    <span class="modal-label">Due</span>
+    <select class="modal-select" id="modal-due" aria-label="Due date">
+      <option value="">No due date</option>
+      <option value="Today">Today</option>
+      <option value="Mon">Mon</option>
+      <option value="Tue">Tue</option>
+      <option value="Wed">Wed</option>
+      <option value="Thu">Thu</option>
+      <option value="Fri">Fri</option>
+    </select>
+  </div>
+  <textarea class="modal-desc-input" id="modal-desc" rows="4" placeholder="Add a description…" aria-label="Description"></textarea>
+  <p class="modal-foot" id="modal-meta">Added by — · —</p>
+
+  <div class="modal-comments">
+    <p class="modal-comments-title">Comments</p>
+    <ul class="comment-list" id="comment-list"></ul>
+    <form class="comment-form" id="comment-form">
+      <textarea class="comment-input" id="comment-input" rows="2" placeholder="Write a comment…" aria-label="Write a comment"></textarea>
+      <button class="btn-primary comment-post" type="submit">Post</button>
+    </form>
+  </div>
+</div>
 
 <script>
   (function () {
@@ -1020,6 +1107,7 @@
       cards.slice(0, 8).forEach(function (card) {
         var li = document.createElement('li');
         li.className = 'list-item';
+        li._sourceCard = card;
         var due = card.getAttribute('data-due');
         var assignee = card.getAttribute('data-assignee');
         var right = '';
@@ -1064,50 +1152,257 @@
       captureInput.focus();
     });
 
-    /* ---- Card detail drawer ---- */
-    var drawer = document.getElementById('drawer');
-    var drawerBackdrop = document.getElementById('drawer-backdrop');
+    /* ---- Card detail modal ---- */
+    var cardModal = document.getElementById('card-modal');
+    var modalBackdrop = document.getElementById('modal-backdrop');
+    var modalBoard = document.getElementById('modal-board');
+    var modalTitle = document.getElementById('modal-title');
+    var modalPriority = document.getElementById('modal-priority');
+    var modalAssignee = document.getElementById('modal-assignee');
+    var modalDue = document.getElementById('modal-due');
+    var modalDesc = document.getElementById('modal-desc');
+    var modalMeta = document.getElementById('modal-meta');
+    var commentList = document.getElementById('comment-list');
+    var commentForm = document.getElementById('comment-form');
+    var commentInput = document.getElementById('comment-input');
 
-    function priorityPillClass(p) {
-      if (p === 'High') return 'bad';
-      if (p === 'Medium') return 'warn';
-      return 'pending';
+    var currentModalCard = null;
+    var commentsByCard = new WeakMap();
+
+    function findCardByTitle(title) {
+      var cards = document.querySelectorAll('.card');
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].getAttribute('data-title') === title) return cards[i];
+      }
+      return null;
     }
 
-    function openDrawer(card) {
-      document.getElementById('drawer-board').textContent = card.getAttribute('data-board') + ' · ' + card.getAttribute('data-column');
-      document.getElementById('drawer-title').textContent = card.getAttribute('data-title');
+    function renderCardFace(card) {
       var priority = card.getAttribute('data-priority');
-      var priorityEl = document.getElementById('drawer-priority');
-      priorityEl.textContent = priority;
-      priorityEl.className = 'pill ' + priorityPillClass(priority);
-      var assignee = card.getAttribute('data-assignee');
-      var avatarEl = document.getElementById('drawer-assignee-avatar');
-      avatarEl.textContent = assignee;
-      avatarEl.style.setProperty('--c', AVATAR_COLORS[assignee]);
-      document.getElementById('drawer-assignee-name').textContent = card.getAttribute('data-assignee-name');
-      var due = card.getAttribute('data-due');
-      document.getElementById('drawer-due').textContent = due ? 'Due ' + due : 'No due date';
-      document.getElementById('drawer-desc').textContent = card.getAttribute('data-desc') || '';
-      document.getElementById('drawer-meta').textContent = 'Added by ' + card.getAttribute('data-created-by') + ' · ' + card.getAttribute('data-created');
-      drawer.classList.add('is-open');
-      drawer.setAttribute('aria-hidden', 'false');
-      drawerBackdrop.classList.add('is-open');
+      card.classList.remove('pri-high', 'pri-med', 'pri-low');
+      if (priority === 'High') card.classList.add('pri-high');
+      else if (priority === 'Medium') card.classList.add('pri-med');
+      else if (priority === 'Low') card.classList.add('pri-low');
+
+      var titleEl = card.querySelector('.card-title');
+      if (titleEl) titleEl.textContent = card.getAttribute('data-title');
+
+      var metaLeft = card.querySelector('.card-meta-left');
+      if (metaLeft) {
+        var due = card.getAttribute('data-due');
+        var bits = '';
+        if (priority === 'High') bits += '<span class="card-priority">High</span>';
+        if (due) bits += '<span class="card-due' + (due === 'Today' ? ' is-today' : '') + '">Due ' + due + '</span>';
+        metaLeft.innerHTML = bits;
+      }
+
+      var avatarEl = card.querySelector('.card-meta .avatar');
+      if (avatarEl) {
+        var assignee = card.getAttribute('data-assignee');
+        avatarEl.textContent = assignee;
+        avatarEl.style.setProperty('--c', AVATAR_COLORS[assignee]);
+      }
     }
 
-    function closeDrawer() {
-      drawer.classList.remove('is-open');
-      drawer.setAttribute('aria-hidden', 'true');
-      drawerBackdrop.classList.remove('is-open');
+    function renderComments() {
+      var comments = currentModalCard ? (commentsByCard.get(currentModalCard) || []) : [];
+      commentList.innerHTML = '';
+      if (comments.length === 0) {
+        var empty = document.createElement('li');
+        empty.className = 'comment-empty';
+        empty.textContent = 'No comments yet.';
+        commentList.appendChild(empty);
+        return;
+      }
+      comments.forEach(function (comment, index) {
+        var li = document.createElement('li');
+        li.className = 'comment';
+        li.innerHTML =
+          '<div class="comment-head">' +
+            '<span class="avatar" style="--c:' + AVATAR_COLORS[comment.author] + '">' + comment.author + '</span>' +
+            '<span class="comment-author"></span>' +
+            '<span class="comment-time"></span>' +
+            '<button class="comment-delete" type="button" data-index="' + index + '" aria-label="Delete comment">✕</button>' +
+          '</div>' +
+          '<p class="comment-text"></p>';
+        li.querySelector('.comment-author').textContent = comment.authorName;
+        li.querySelector('.comment-time').textContent = comment.timestamp;
+        li.querySelector('.comment-text').textContent = comment.text;
+        commentList.appendChild(li);
+      });
     }
+
+    function seedComments() {
+      var bugCard = findCardByTitle('GDPR export omits liked/commented posts');
+      if (bugCard) {
+        commentsByCard.set(bugCard, [
+          { author: 'AM', authorName: 'Ashoka Mullassery', text: 'Confirmed with legal — likes and comments count as personal data under Article 15, so this needs to ship before we can call the GDPR export complete.', timestamp: '2 days ago' },
+          { author: 'AK', authorName: 'Anulome Kishore', text: 'On it — the join to pull comments is slower than expected, might need an index before this is ready to test.', timestamp: '1 day ago' }
+        ]);
+      }
+      var featureCard = findCardByTitle('Taste Profile Builder — "your year in drinks"');
+      if (featureCard) {
+        commentsByCard.set(featureCard, [
+          { author: 'AM', authorName: 'Ashoka Mullassery', text: 'Let\'s make sure the share image works without an account — most of the value is people posting it outside the app.', timestamp: '3 days ago' }
+        ]);
+      }
+    }
+
+    function openModal(card) {
+      currentModalCard = card;
+      modalBoard.textContent = card.getAttribute('data-board') + ' · ' + card.getAttribute('data-column');
+      modalTitle.value = card.getAttribute('data-title') || '';
+      modalPriority.value = card.getAttribute('data-priority') || 'Medium';
+      modalAssignee.value = card.getAttribute('data-assignee') || 'JR';
+      modalDue.value = card.getAttribute('data-due') || '';
+      modalDesc.value = card.getAttribute('data-desc') || '';
+      modalMeta.textContent = 'Added by ' + card.getAttribute('data-created-by') + ' · ' + card.getAttribute('data-created');
+      renderComments();
+      cardModal.classList.add('is-open');
+      cardModal.setAttribute('aria-hidden', 'false');
+      modalBackdrop.classList.add('is-open');
+      modalTitle.focus();
+    }
+
+    function closeModal() {
+      cardModal.classList.remove('is-open');
+      cardModal.setAttribute('aria-hidden', 'true');
+      modalBackdrop.classList.remove('is-open');
+      currentModalCard = null;
+    }
+
+    modalTitle.addEventListener('blur', function () {
+      if (!currentModalCard) return;
+      var val = modalTitle.value.trim();
+      if (!val) { modalTitle.value = currentModalCard.getAttribute('data-title'); return; }
+      currentModalCard.setAttribute('data-title', val);
+      renderCardFace(currentModalCard);
+      applyBoardFilters();
+    });
+
+    modalDesc.addEventListener('blur', function () {
+      if (!currentModalCard) return;
+      currentModalCard.setAttribute('data-desc', modalDesc.value.trim());
+    });
+
+    modalPriority.addEventListener('change', function () {
+      if (!currentModalCard) return;
+      currentModalCard.setAttribute('data-priority', modalPriority.value);
+      renderCardFace(currentModalCard);
+    });
+
+    modalAssignee.addEventListener('change', function () {
+      if (!currentModalCard) return;
+      var code = modalAssignee.value;
+      var fullName = modalAssignee.options[modalAssignee.selectedIndex].textContent;
+      currentModalCard.setAttribute('data-assignee', code);
+      currentModalCard.setAttribute('data-assignee-name', fullName);
+      renderCardFace(currentModalCard);
+      applyBoardFilters();
+    });
+
+    modalDue.addEventListener('change', function () {
+      if (!currentModalCard) return;
+      currentModalCard.setAttribute('data-due', modalDue.value);
+      renderCardFace(currentModalCard);
+    });
+
+    commentForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!currentModalCard) return;
+      var text = commentInput.value.trim();
+      if (!text) return;
+      var comments = commentsByCard.get(currentModalCard) || [];
+      comments.push({ author: currentUser, authorName: AVATAR_NAMES[currentUser], text: text, timestamp: 'just now' });
+      commentsByCard.set(currentModalCard, comments);
+      commentInput.value = '';
+      renderComments();
+    });
+
+    commentList.addEventListener('click', function (e) {
+      var btn = e.target.closest('.comment-delete');
+      if (!btn || !currentModalCard) return;
+      var idx = parseInt(btn.getAttribute('data-index'), 10);
+      var comments = commentsByCard.get(currentModalCard) || [];
+      comments.splice(idx, 1);
+      commentsByCard.set(currentModalCard, comments);
+      renderComments();
+    });
+
+    var justDragged = false;
 
     document.addEventListener('click', function (e) {
-      var card = e.target.closest('.card, .list-item[data-title]');
-      if (card) { openDrawer(card); return; }
+      if (justDragged) { justDragged = false; return; }
+      var target = e.target.closest('.card, .list-item[data-title]');
+      if (!target) return;
+      var card = target.classList.contains('list-item') ? (target._sourceCard || target) : target;
+      openModal(card);
     });
-    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
-    drawerBackdrop.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+    seedComments();
+
+    /* ---- Board drag-and-drop ---- */
+    var COLUMN_TITLE_TO_DATA = {
+      'To do': 'To Do',
+      'In progress': 'In Progress',
+      'Ready to test': 'Ready to Test',
+      'Ready for release': 'Ready for Release',
+      'Released': 'Released',
+      'Done': 'Done'
+    };
+
+    function columnCanonicalName(column) {
+      var title = column.querySelector('.column-title').textContent.trim();
+      return COLUMN_TITLE_TO_DATA[title] || title;
+    }
+
+    var draggedCard = null;
+
+    document.querySelectorAll('.card').forEach(function (card) {
+      card.setAttribute('draggable', 'true');
+    });
+
+    document.addEventListener('dragstart', function (e) {
+      var card = e.target.closest('.card');
+      if (!card) return;
+      draggedCard = card;
+      card.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    });
+
+    document.addEventListener('dragend', function () {
+      if (draggedCard) draggedCard.classList.remove('is-dragging');
+      draggedCard = null;
+      justDragged = true;
+      setTimeout(function () { justDragged = false; }, 0);
+      document.querySelectorAll('.column.is-drag-over').forEach(function (c) { c.classList.remove('is-drag-over'); });
+    });
+
+    document.querySelectorAll('.column').forEach(function (column) {
+      column.addEventListener('dragover', function (e) {
+        if (!draggedCard) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        column.classList.add('is-drag-over');
+      });
+      column.addEventListener('dragleave', function (e) {
+        if (!column.contains(e.relatedTarget)) column.classList.remove('is-drag-over');
+      });
+      column.addEventListener('drop', function (e) {
+        e.preventDefault();
+        column.classList.remove('is-drag-over');
+        if (!draggedCard) return;
+        var emptyMsg = column.querySelector(':scope > .column-empty');
+        if (emptyMsg) emptyMsg.remove();
+        column.appendChild(draggedCard);
+        draggedCard.setAttribute('data-column', columnCanonicalName(column));
+        applyBoardFilters();
+      });
+    });
 
     /* ---- Init ---- */
     showBoard('tasks');
