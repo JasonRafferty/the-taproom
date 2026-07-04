@@ -1,11 +1,14 @@
 # The Taproom — Design Spec
 
-**Date:** 2026-07-03 (revised after UI mockup pass)
+**Date:** 2026-07-03 (revised after UI mockup pass); card interactions revised 2026-07-04
 **Status:** Draft for review
 **Visual reference:** `docs/mockups/2026-07-03-taproom-mockup.html` — a static, self-contained
 HTML mockup of every view described below. Open it directly in a browser; it's the
 canonical picture of what "done" looks like for v1, this document is the canonical
 description of *why* and *exactly what data it runs on*.
+**See also:** `docs/superpowers/specs/2026-07-04-board-card-interactions-design.md` for the
+detailed design of drag-and-drop, the card detail modal, and comments (§8 below was revised
+to match).
 
 ## 1. Purpose
 
@@ -34,7 +37,6 @@ pulled from the actual app for more than the initial build.
 
 ## 2. Non-goals (v1)
 
-- No comments/activity feed on cards
 - No email notifications or digests
 - No file uploads (links only, no attachments)
 - No roles/permissions — all four accounts are equal
@@ -157,9 +159,10 @@ watch it through to release."*).
 - `dueDate` (optional, simple date — no time component needed)
 - `createdBy`, `createdAt`, `updatedAt`
 
-**Interaction:** drag-and-drop between columns within a board; create/edit/archive cards.
-Archived cards are hidden from the board but not deleted (soft delete), so history isn't
-lost.
+**Interaction:** drag-and-drop between columns within a board — dropping a card into a
+column appends it to that column (no manual reordering within a column in v1); create/edit/
+archive cards. Archived cards are hidden from the board but not deleted (soft delete), so
+history isn't lost.
 
 **Empty states:** a column with zero cards shows a short dashed-border placeholder
 message rather than blank space (e.g. Bugs → Released, pre-launch: *"Nothing released yet
@@ -170,11 +173,16 @@ out).
 
 ## 8. Card Detail View
 
-Clicking any card opens a detail panel (slide-over drawer in the mockup) showing: full
-title, board + column, priority, assignee, due date, full description, and a footer with
-who created it and when. This is **view + edit**, not a comment thread — per §2, no
-activity feed or comment history. Editing any field updates the card in place; there's no
-separate "edit mode," the fields are just editable inline in the drawer.
+Clicking any card opens a **centered modal** (not a slide-over drawer) showing: full title,
+board + column, priority, assignee, due date, full description, a footer with who created
+it and when, and a comment thread. Title and description are editable inline (save on
+blur); priority, assignee, and due date are dropdowns that save immediately on selection —
+there's no separate "edit mode" or Save button anywhere in the modal.
+
+**Comments:** any of the four founders can add a comment (authored as whoever is currently
+logged in) and any founder can delete any comment — consistent with §2's "no roles, all
+four equal." Full data model and UI detail in
+`docs/superpowers/specs/2026-07-04-board-card-interactions-design.md`.
 
 ## 9. Filtering & Search
 
@@ -273,8 +281,8 @@ that's actually a login credential, separate from this tool.
 
 Not a mobile app (§2), but the web app must remain usable on a phone browser between
 meetings. At minimum: the sidebar collapses to a bottom bar or hamburger below ~700px,
-board columns remain horizontally scrollable, and the card detail drawer becomes full-width
-on small screens rather than a fixed 380px panel.
+board columns remain horizontally scrollable, and the card detail modal becomes full-width/
+full-height on small screens rather than a fixed centered dialog.
 
 ## 17. Open items for the implementation plan
 
