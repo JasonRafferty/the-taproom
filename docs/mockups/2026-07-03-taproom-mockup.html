@@ -150,23 +150,35 @@
   .capture-input::placeholder { color: var(--mist-dim); }
   .capture-select { background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: var(--radius); padding: 10px 12px; font-size: 13.5px; }
 
-  /* ---------- Due / done / my-cards lists ---------- */
+  /* ---------- Home: recap line ---------- */
+  .home-recap { font-size: 13px; color: var(--good); margin: -6px 0 22px; }
+  .home-recap[hidden] { display: none; }
+
+  /* ---------- Panel header row (title + count + optional toggle) ---------- */
+  .panel-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .panel-head-row h2 { margin-bottom: 0; }
+  .panel-count { color: var(--mist-dim); font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+  .scope-toggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 2px; gap: 2px; flex: none; }
+  .scope-btn { background: none; border: none; color: var(--mist); font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+  .scope-btn:hover { color: var(--ink); }
+  .scope-btn.is-active { background: var(--accent-2-soft); color: var(--ink); }
+
+  /* ---------- Due / my-cards / what's-next lists ---------- */
   .list { display: flex; flex-direction: column; gap: 10px; }
   .list-item { display: flex; align-items: center; gap: 8px; font-size: 13.5px; flex-wrap: wrap; }
-  .list-marker { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; flex: none; font-size: 11px; font-weight: 700; }
-  .list-marker.due { background: var(--warn-soft); color: var(--warn); }
-  .list-marker.done { background: var(--good-soft); color: var(--good); }
-  .list-item time { margin-left: auto; font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .list-item[data-title] { cursor: pointer; padding: 6px 8px; margin: -6px -8px; border-radius: 8px; }
+  .list-item[data-title]:hover { background: var(--card-hover); }
+  .list-item .avatar { width: 20px; height: 20px; font-size: 9px; cursor: inherit; }
+  .list-item-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+  .list-item time { font-size: 11.5px; color: var(--mist-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .list-item time.is-today { color: var(--warn); font-weight: 700; }
+  .list-empty { color: var(--mist-dim); }
 
   .src-tag { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 5px; flex: none; }
   .src-tag.src-bugs { background: var(--bad-soft); color: var(--bad); }
   .src-tag.src-features { background: var(--accent-2-soft); color: #e39dc0; }
   .src-tag.src-tasks { background: var(--pending-soft); color: var(--mist); }
-
-  /* ---------- Quick links ---------- */
-  .quick-links { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ---------- Board toolbar ---------- */
   .board-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -388,12 +400,13 @@
         </div>
       </header>
       <p class="page-purpose">Start here — capture what's on your mind, see what's yours, see what's due.</p>
+      <p class="home-recap" id="home-recap" hidden></p>
 
       <div class="capture-panel">
         <h2>Got something on your mind?</h2>
-        <p class="panel-note">Drop it here — it lands on the right board so it's never just lost in a WhatsApp thread.</p>
+        <p class="panel-note">Drop it here — it lands on the right board so it's never just lost in a WhatsApp thread. Press <strong>/</strong> to jump straight here.</p>
         <div class="capture-row">
-          <input class="capture-input" type="text" placeholder="e.g. Map pins overlap when zoomed in on Manchester">
+          <input class="capture-input" id="capture-input" type="text" placeholder="e.g. Map pins overlap when zoomed in on Manchester">
           <select class="capture-select">
             <option>Feature idea</option>
             <option>Bug</option>
@@ -403,39 +416,16 @@
         </div>
       </div>
 
-      <div class="grid-2">
-        <section class="panel">
-          <h2>My open cards</h2>
-          <ul class="list" id="my-cards-list"></ul>
-        </section>
-
-        <section class="panel">
-          <h2>Due soon</h2>
-          <ul class="list" id="due-soon-list"></ul>
-        </section>
-      </div>
-
-      <div class="grid-2">
-        <section class="panel">
-          <h2>Recently completed</h2>
-          <ul class="list">
-            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> GDPR export &amp; erasure endpoints <time>2d ago</time></li>
-            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-features">Feature</span> Discover feed — Community + Following <time>Jun 2026</time></li>
-            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> Select colour scheme <time>Jan 2026</time></li>
-            <li class="list-item"><span class="list-marker done">✓</span><span class="src-tag src-tasks">Task</span> Complete logo design <time>Jan 2026</time></li>
-          </ul>
-        </section>
-
-        <section class="panel">
-          <h2>Quick links</h2>
-          <div class="quick-links">
-            <a class="chip" href="#">↗ GitHub — Siply-MVP</a>
-            <a class="chip" href="#">↗ Figma (shared by Nav)</a>
-            <a class="chip" href="#">↗ Canva — Pitch deck</a>
-            <a class="chip" href="#">↗ MEC Notion page</a>
+      <section class="panel">
+        <div class="panel-head-row">
+          <h2>What's next <span class="panel-count" id="whats-next-count"></span></h2>
+          <div class="scope-toggle" id="whats-next-toggle">
+            <button class="scope-btn is-active" data-scope="mine" type="button">Mine</button>
+            <button class="scope-btn" data-scope="everyone" type="button">Everyone</button>
           </div>
-        </section>
-      </div>
+        </div>
+        <ul class="list" id="whats-next-list"></ul>
+      </section>
     </section>
 
     <!-- ================= BOARD ================= -->
@@ -946,7 +936,7 @@
       homeViewer.textContent = AVATAR_NAMES[code];
       mineChipAvatar.style.setProperty('--c', AVATAR_COLORS[code]);
       mineChipAvatar.textContent = code;
-      renderMyCards();
+      setWhatsNextScope('mine');
       var activeChip = document.querySelector('.filter-chip.is-active');
       if (activeChip && activeChip.getAttribute('data-filter') === 'mine') applyBoardFilters();
     }
@@ -955,54 +945,124 @@
       av.addEventListener('click', function () { setViewer(av.getAttribute('data-code')); });
     });
 
-    /* ---- Home: My open cards ---- */
-    function renderMyCards() {
-      var list = document.getElementById('my-cards-list');
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-assignee="' + currentUser + '"]'));
-      cards = cards.filter(function (c) {
-        var col = c.getAttribute('data-column');
-        return col !== 'Done' && col !== 'Released';
+    /* ---- Home: recap (most recently completed card, derived) ---- */
+    var MONTH_INDEX = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+    var TODAY_REF = new Date(2026, 6, 3);
+
+    function daysAgo(str) {
+      if (!str) return Infinity;
+      str = str.trim();
+      if (/^today$/i.test(str)) return 0;
+      if (/^yesterday$/i.test(str)) return 1;
+      var m = str.match(/^(\d+)\s+days?\s+ago$/i);
+      if (m) return parseInt(m[1], 10);
+      m = str.match(/^(\d+)\s+weeks?\s+ago$/i);
+      if (m) return parseInt(m[1], 10) * 7;
+      m = str.match(/^([A-Za-z]{3})\w*\s+(\d{4})$/);
+      if (m && MONTH_INDEX.hasOwnProperty(m[1])) {
+        var d = new Date(parseInt(m[2], 10), MONTH_INDEX[m[1]], 1);
+        return Math.round((TODAY_REF - d) / 86400000);
+      }
+      return Infinity;
+    }
+
+    function renderRecap() {
+      var recapEl = document.getElementById('home-recap');
+      var done = Array.prototype.slice.call(document.querySelectorAll('.card[data-column="Done"], .card[data-column="Released"]'));
+      done.sort(function (a, b) { return daysAgo(a.getAttribute('data-created')) - daysAgo(b.getAttribute('data-created')); });
+      if (done.length === 0) { recapEl.hidden = true; return; }
+      recapEl.hidden = false;
+      recapEl.textContent = '🎉 ' + done[0].getAttribute('data-title') + ' shipped ' + done[0].getAttribute('data-created');
+    }
+
+    /* ---- Home: What's next (merged my-cards + due-soon, derived, scoped Mine/Everyone) ---- */
+    var whatsNextScope = 'mine';
+    var whatsNextToggle = document.getElementById('whats-next-toggle');
+
+    function setWhatsNextScope(scope) {
+      whatsNextScope = scope;
+      whatsNextToggle.querySelectorAll('.scope-btn').forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-scope') === scope);
       });
+      renderWhatsNext();
+    }
+
+    whatsNextToggle.addEventListener('click', function (e) {
+      var btn = e.target.closest('.scope-btn');
+      if (btn) setWhatsNextScope(btn.getAttribute('data-scope'));
+    });
+
+    function renderWhatsNext() {
+      var list = document.getElementById('whats-next-list');
+      var countEl = document.getElementById('whats-next-count');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.card')).filter(function (c) {
+        var col = c.getAttribute('data-column');
+        if (col === 'Done' || col === 'Released') return false;
+        return whatsNextScope === 'everyone' || c.getAttribute('data-assignee') === currentUser;
+      });
+      cards.sort(function (a, b) {
+        var da = DUE_ORDER[a.getAttribute('data-due')];
+        var db = DUE_ORDER[b.getAttribute('data-due')];
+        return (da === undefined ? 99 : da) - (db === undefined ? 99 : db);
+      });
+
       list.innerHTML = '';
+      countEl.textContent = cards.length ? '· ' + cards.length : '';
+
       if (cards.length === 0) {
         var empty = document.createElement('li');
-        empty.className = 'list-item';
-        empty.style.color = 'var(--mist-dim)';
-        empty.textContent = 'Nothing open right now — nice.';
+        empty.className = 'list-item list-empty';
+        empty.textContent = whatsNextScope === 'mine' ? 'Nothing open right now — nice.' : 'Nothing open on any board right now.';
         list.appendChild(empty);
         return;
       }
-      cards.slice(0, 6).forEach(function (card) {
+
+      cards.slice(0, 8).forEach(function (card) {
         var li = document.createElement('li');
         li.className = 'list-item';
         var due = card.getAttribute('data-due');
+        var assignee = card.getAttribute('data-assignee');
+        var right = '';
+        if (due) right += '<time class="' + (due === 'Today' ? 'is-today' : '') + '">' + due + '</time>';
+        if (whatsNextScope === 'everyone') right += '<span class="avatar" style="--c:' + AVATAR_COLORS[assignee] + '">' + assignee + '</span>';
         li.innerHTML =
           '<span class="src-tag src-' + card.getAttribute('data-board').toLowerCase() + '">' + card.getAttribute('data-board') + '</span> ' +
           card.getAttribute('data-title') +
-          (due ? '<time>' + due + '</time>' : '');
+          (right ? '<span class="list-item-right">' + right + '</span>' : '');
+        ['title', 'board', 'column', 'priority', 'assignee', 'assignee-name', 'due', 'desc', 'created-by', 'created'].forEach(function (attr) {
+          var val = card.getAttribute('data-' + attr);
+          if (val !== null) li.setAttribute('data-' + attr, val);
+        });
         list.appendChild(li);
       });
     }
 
-    /* ---- Home: Due soon (derived from every card with a due date) ---- */
-    function renderDueSoon() {
-      var list = document.getElementById('due-soon-list');
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-due]'));
-      cards.sort(function (a, b) {
-        return (DUE_ORDER[a.getAttribute('data-due')] || 99) - (DUE_ORDER[b.getAttribute('data-due')] || 99);
-      });
-      list.innerHTML = '';
-      cards.slice(0, 5).forEach(function (card) {
-        var li = document.createElement('li');
-        li.className = 'list-item';
-        li.innerHTML =
-          '<span class="list-marker due">!</span>' +
-          '<span class="src-tag src-' + card.getAttribute('data-board').toLowerCase() + '">' + card.getAttribute('data-board') + '</span> ' +
-          card.getAttribute('data-title') +
-          '<time>' + card.getAttribute('data-due') + '</time>';
-        list.appendChild(li);
-      });
-    }
+    /* ---- Home: quick capture helpers ---- */
+    var captureInput = document.getElementById('capture-input');
+    var captureSelect = document.querySelector('.capture-select');
+    var captureTypeManual = false;
+
+    captureSelect.addEventListener('change', function () { captureTypeManual = true; });
+
+    captureInput.addEventListener('input', function () {
+      var v = captureInput.value.trim().toLowerCase();
+      if (v === '') { captureTypeManual = false; return; }
+      if (captureTypeManual) return;
+      if (/\b(bug|broken|crash|error|glitch|fails?|doesn't work|issue)\b/.test(v)) {
+        captureSelect.value = 'Bug';
+      } else if (/\b(idea|feature|wish|would be nice|what if|could add)\b/.test(v)) {
+        captureSelect.value = 'Feature idea';
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      var tag = (e.target.tagName || '').toUpperCase();
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (!document.getElementById('view-home').classList.contains('is-active')) return;
+      e.preventDefault();
+      captureInput.focus();
+    });
 
     /* ---- Card detail drawer ---- */
     var drawer = document.getElementById('drawer');
@@ -1042,7 +1102,7 @@
     }
 
     document.addEventListener('click', function (e) {
-      var card = e.target.closest('.card');
+      var card = e.target.closest('.card, .list-item[data-title]');
       if (card) { openDrawer(card); return; }
     });
     document.getElementById('drawer-close').addEventListener('click', closeDrawer);
@@ -1051,7 +1111,7 @@
 
     /* ---- Init ---- */
     showBoard('tasks');
-    renderMyCards();
-    renderDueSoon();
+    renderRecap();
+    renderWhatsNext();
   })();
 </script>
