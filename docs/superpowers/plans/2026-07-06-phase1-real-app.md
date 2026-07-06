@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - Install `next`, `react`, `react-dom`, `@prisma/client`, `bcryptjs`, `prisma`, `typescript`, `tsx`, and `@types/*` via `npm install <pkg>@latest` — never hand-write version numbers into `package.json`; let npm resolve and pin them in `package-lock.json`.
+- This project is on Prisma 7: `PrismaClient` requires an explicit driver adapter (`@prisma/adapter-pg`, installed in Task 3) — `new PrismaClient()` with no arguments throws. The CLI (`migrate`, `studio`) reads connection info from `prisma.config.ts`, not from `schema.prisma`'s `datasource.url`. Every place that needs a Prisma client imports the one singleton from `@/lib/db` (or `../src/lib/db` from scripts outside Next's path-alias resolution) rather than constructing a new one.
 - TypeScript throughout. Path alias `@/*` → `./src/*`.
 - Styling: plain CSS ported from the mockup into `src/app/globals.css`. No Tailwind, no CSS-in-JS.
 - Auth: hand-rolled bcrypt + HMAC-SHA256-signed session cookie, implemented with the **Web Crypto API only** (`crypto.subtle`, `btoa`) — never Node's `crypto` module or `Buffer`. `middleware.ts` runs in the Edge runtime, which has neither; the same `src/lib/session.ts` code is shared between middleware (Edge) and route handlers (Node), so it must work in both.
@@ -38,6 +39,7 @@ the-taproom/
 ├── tsconfig.json
 ├── next.config.js
 ├── middleware.ts              # route protection (Edge runtime)
+├── prisma.config.ts            # Prisma 7 CLI config (datasource URL, migrations path)
 ├── prisma/
 │   ├── schema.prisma          # User, Card, Comment, Link models
 │   └── seed.ts                # creates 4 users only
@@ -312,18 +314,19 @@ git commit -m "Add Docker Compose dev environment"
 ### Task 3: Prisma schema + client
 
 **Files:**
-- Create: `prisma/schema.prisma`, `src/lib/db.ts`
+- Create: `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/db.ts`
 
 **Interfaces:**
 - Consumes: `DATABASE_URL` env var from Task 2.
 - Produces: `User`, `Card`, `Comment`, `Link` Prisma models; `prisma` client singleton exported from `@/lib/db`.
+
+**Note on Prisma 7:** this project is on Prisma 7 (installed via `@latest` in Task 1), which changed two things from older Prisma versions: (1) the CLI no longer reads `datasource.url` out of `schema.prisma` — it needs a `prisma.config.ts` file instead; (2) `PrismaClient` no longer accepts zero-argument construction — it requires an explicit driver adapter. Both are handled in the steps below.
 
 - [ ] **Step 1: Write `prisma/schema.prisma`**
 
 ```prisma
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -394,28 +397,58 @@ model Link {
 }
 ```
 
-- [ ] **Step 2: Write `src/lib/db.ts`**
+- [ ] **Step 2: Write `prisma.config.ts`** (repo root, next to `package.json`)
+
+Prisma 7's CLI (`migrate`, `studio`, etc.) reads connection info from this file, not from `schema.prisma`. `docker-compose.yml` already injects `DATABASE_URL` directly as a container environment variable, so no `.env`-loading step is needed here — don't add a `dotenv` import.
+
+```ts
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
+  migrations: {
+    path: "prisma/migrations",
+  },
+});
+```
+
+- [ ] **Step 3: Install the Postgres driver adapter**
+
+Prisma 7 requires a driver adapter — `new PrismaClient()` with no arguments throws. Install:
+
+```bash
+npm install @prisma/adapter-pg pg
+npm install -D @types/pg
+```
+
+- [ ] **Step 4: Write `src/lib/db.ts`**
 
 ```ts
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 ```
 
-- [ ] **Step 3: Bring up Docker and run the migration**
+- [ ] **Step 5: Bring up Docker and run the migration**
 
 ```bash
 docker compose up -d --build
 docker compose exec app npx prisma migrate dev --name init
 ```
 
-- [ ] **Step 4: Verify**
+- [ ] **Step 6: Verify**
 
 ```bash
 docker compose exec db psql -U taproom -d taproom -c '\dt'
@@ -423,10 +456,18 @@ docker compose exec db psql -U taproom -d taproom -c '\dt'
 
 Expected: a table list including `User`, `Card`, `Comment`, `Link`, `_prisma_migrations`.
 
-- [ ] **Step 5: Commit**
+Also verify the adapter-based client actually works (this is the real deliverable — a raw `psql` check alone does not exercise `PrismaClient`):
 
 ```bash
-git add prisma/schema.prisma prisma/migrations src/lib/db.ts
+docker compose exec app npx tsx -e "import('./src/lib/db').then(async ({ prisma }) => { console.log(await prisma.user.findMany()); await prisma.\$disconnect(); })"
+```
+
+Expected: `[]` (empty array — no users seeded yet), with no thrown error.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add package.json package-lock.json prisma/schema.prisma prisma.config.ts prisma/migrations src/lib/db.ts
 git commit -m "Add Prisma schema (User, Card, Comment, Link)"
 ```
 
@@ -438,16 +479,14 @@ git commit -m "Add Prisma schema (User, Card, Comment, Link)"
 - Create: `prisma/seed.ts`
 
 **Interfaces:**
-- Consumes: `SEED_PASSWORD` env var (Task 2), `User` model (Task 3).
+- Consumes: `SEED_PASSWORD` env var (Task 2), `User` model (Task 3), `prisma` client singleton from `@/lib/db` (Task 3) — imported by relative path (`../src/lib/db`) since this script runs via `tsx`, not through Next.js's path-alias resolution.
 - Produces: 4 seeded users (`ashoka`, `anulome`, `arvin`, `jason`), all sharing one bcrypt-hashed password.
 
 - [ ] **Step 1: Write `prisma/seed.ts`**
 
 ```ts
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/db";
 
 const SHARED_PASSWORD = process.env.SEED_PASSWORD;
 if (!SHARED_PASSWORD) {
