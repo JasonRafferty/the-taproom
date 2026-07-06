@@ -1203,7 +1203,7 @@ git commit -m "Add Home aggregation API route"
 
 Open `docs/mockups/2026-07-03-taproom-mockup.html` and copy everything between the `<style>` tag on line 9 and the `</style>` tag on line 500 (the CSS rules only, not the tags themselves) into a new `src/app/globals.css`, verbatim.
 
-Then append this addition to the end of the file (new patterns not in the original mockup — a real login page and the centered card-detail modal that replaces the mockup's unbuilt slide-over drawer):
+Then append this addition to the end of the file — **only a real login page and a logout button style**, since the mockup never had either. **The mockup already has a complete, ready-to-use CSS system for the card-detail modal and comments** (`.modal-backdrop`, `.modal`, `.modal-head`, `.modal-title-input`, `.modal-row`, `.modal-label`, `.modal-select`, `.modal-desc-input`, `.modal-foot`, `.modal-comments`, `.comment-list`, `.comment-head`, `.comment-author`, `.comment-time`, `.comment-delete`, `.comment-text`, `.comment-form`, `.comment-input`, `.comment-post`, all already copied in verbatim by Step 1 above) — it was designed ahead of the feature being wired up, per `docs/BUILD-STATUS.md`'s note that the modal was "SPEC'd but NOT yet in the mockup" (meaning the JS/markup wiring, not the CSS). **Do not invent new modal/comment class names** — Tasks 10 and 11 use these exact existing classes. The only thing those existing rules need that a real React component supplies differently than the mockup's original toggle-based JS: the mockup shows/hides via an `.is-open` modifier class on a permanently-mounted element (`.modal { opacity: 0; ... } .modal.is-open { opacity: 1; ... }`) — since our React modal only mounts when it should be visible, Tasks 10/11 include `is-open` in the className unconditionally (e.g. `className="modal is-open"`), which reuses the existing rules correctly without adding parallel/conflicting CSS.
 
 ```css
 
@@ -1238,116 +1238,6 @@ Then append this addition to the end of the file (new patterns not in the origin
   padding: 8px 10px;
   color: var(--ink);
   font-size: 14px;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 24px;
-  max-width: 560px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.modal-title {
-  background: transparent;
-  border: none;
-  color: var(--ink);
-  font-size: 20px;
-  font-family: var(--font-display);
-  padding: 0;
-}
-
-.modal-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.modal-fields label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12.5px;
-  color: var(--mist);
-}
-
-.modal-fields select,
-.modal-fields input {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 8px;
-  color: var(--ink);
-}
-
-.modal-description {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px;
-  color: var(--ink);
-  min-height: 80px;
-  font-family: inherit;
-}
-
-.modal-footer {
-  color: var(--mist-dim);
-  font-size: 12px;
-}
-
-.comment-thread {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-}
-
-.comment {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.comment-body {
-  flex: 1;
-}
-
-.comment-meta {
-  font-size: 12px;
-  color: var(--mist-dim);
-}
-
-.comment-input {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px;
-  color: var(--ink);
-  min-height: 50px;
-  font-family: inherit;
 }
 
 .rail-logout {
@@ -1797,16 +1687,18 @@ export default function BoardView({
       </div>
 
       {selectedCard && (
-        <div className="modal-backdrop" onClick={() => setSelectedCardId(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <p className="eyebrow">
-              {label} · {selectedCard.column}
-            </p>
+        <div className="modal-backdrop is-open" onClick={() => setSelectedCardId(null)}>
+          <div className="modal is-open" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <p className="modal-eyebrow">
+                {label} · {selectedCard.column}
+              </p>
+              <button className="modal-close" type="button" onClick={() => setSelectedCardId(null)}>
+                ×
+              </button>
+            </div>
             <h2>{selectedCard.title}</h2>
             <p>{selectedCard.description}</p>
-            <button type="button" onClick={() => setSelectedCardId(null)}>
-              Close
-            </button>
           </div>
         </div>
       )}
@@ -1890,36 +1782,40 @@ export default function CommentThread({ cardId }: { cardId: string }) {
     setComments((prev) => prev.filter((c) => c.id !== id));
   }
 
-  if (loading) return <p className="page-purpose">Loading comments…</p>;
+  if (loading) return <p className="comment-empty">Loading comments…</p>;
 
   return (
-    <div className="comment-thread">
-      {comments.map((c) => (
-        <div className="comment" key={c.id}>
-          <span className="avatar" style={{ "--c": c.author.avatarColor } as React.CSSProperties}>
-            {initials(c.author.displayName)}
-          </span>
-          <div className="comment-body">
-            <p className="comment-meta">
-              {c.author.displayName} · {new Date(c.createdAt).toLocaleString()}
-            </p>
-            <p>{c.text}</p>
+    <>
+      <div className="comment-list">
+        {comments.length === 0 && <p className="comment-empty">No comments yet.</p>}
+        {comments.map((c) => (
+          <div key={c.id}>
+            <div className="comment-head">
+              <span className="avatar" style={{ "--c": c.author.avatarColor } as React.CSSProperties}>
+                {initials(c.author.displayName)}
+              </span>
+              <span className="comment-author">{c.author.displayName}</span>
+              <span className="comment-time">{new Date(c.createdAt).toLocaleString()}</span>
+              <button className="comment-delete" type="button" onClick={() => remove(c.id)}>
+                Delete
+              </button>
+            </div>
+            <p className="comment-text">{c.text}</p>
           </div>
-          <button type="button" onClick={() => remove(c.id)} aria-label="Delete comment">
-            ×
-          </button>
-        </div>
-      ))}
-      <textarea
-        className="comment-input"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Add a comment…"
-      />
-      <button className="btn-primary" type="button" onClick={post}>
-        Post
-      </button>
-    </div>
+        ))}
+      </div>
+      <div className="comment-form">
+        <textarea
+          className="comment-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Add a comment…"
+        />
+        <button className="btn-primary comment-post" type="button" onClick={post}>
+          Post
+        </button>
+      </div>
+    </>
   );
 }
 ```
@@ -1961,68 +1857,78 @@ export default function CardModal({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop is-open" onClick={onClose}>
+      <div className="modal is-open" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <p className="eyebrow">
+          <p className="modal-eyebrow">
             {boardLabel} · {card.column}
           </p>
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
 
         <input
-          className="modal-title"
+          className="modal-title-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => title !== card.title && patch({ title })}
         />
 
-        <div className="modal-fields">
-          <label>
-            Priority
-            <select value={card.priority ?? ""} onChange={(e) => patch({ priority: e.target.value || null })}>
-              <option value="">None</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
-          </label>
-          <label>
-            Assignee
-            <select value={card.assignee?.id ?? ""} onChange={(e) => patch({ assigneeId: e.target.value || null })}>
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Due date
-            <input
-              type="date"
-              value={card.dueDate ? card.dueDate.slice(0, 10) : ""}
-              onChange={(e) => patch({ dueDate: e.target.value || null })}
-            />
-          </label>
+        <div className="modal-row">
+          <span className="modal-label">Priority</span>
+          <select
+            className="modal-select"
+            value={card.priority ?? ""}
+            onChange={(e) => patch({ priority: e.target.value || null })}
+          >
+            <option value="">None</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </div>
+        <div className="modal-row">
+          <span className="modal-label">Assignee</span>
+          <select
+            className="modal-select"
+            value={card.assignee?.id ?? ""}
+            onChange={(e) => patch({ assigneeId: e.target.value || null })}
+          >
+            <option value="">Unassigned</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.displayName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="modal-row">
+          <span className="modal-label">Due date</span>
+          <input
+            className="modal-select"
+            type="date"
+            value={card.dueDate ? card.dueDate.slice(0, 10) : ""}
+            onChange={(e) => patch({ dueDate: e.target.value || null })}
+          />
         </div>
 
         <textarea
-          className="modal-description"
+          className="modal-desc-input"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           onBlur={() => description !== (card.description ?? "") && patch({ description })}
           placeholder="Description"
         />
 
-        <p className="modal-footer">
+        <p className="modal-foot">
           Added by {card.createdBy.displayName} · {new Date(card.createdAt).toLocaleDateString()}
         </p>
 
-        <CommentThread cardId={card.id} />
+        <div className="modal-comments">
+          <p className="modal-comments-title">Comments</p>
+          <CommentThread cardId={card.id} />
+        </div>
       </div>
     </div>
   );
@@ -2041,16 +1947,18 @@ Replace the placeholder modal block at the end of the component:
 
 ```tsx
       {selectedCard && (
-        <div className="modal-backdrop" onClick={() => setSelectedCardId(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <p className="eyebrow">
-              {label} · {selectedCard.column}
-            </p>
+        <div className="modal-backdrop is-open" onClick={() => setSelectedCardId(null)}>
+          <div className="modal is-open" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <p className="modal-eyebrow">
+                {label} · {selectedCard.column}
+              </p>
+              <button className="modal-close" type="button" onClick={() => setSelectedCardId(null)}>
+                ×
+              </button>
+            </div>
             <h2>{selectedCard.title}</h2>
             <p>{selectedCard.description}</p>
-            <button type="button" onClick={() => setSelectedCardId(null)}>
-              Close
-            </button>
           </div>
         </div>
       )}
