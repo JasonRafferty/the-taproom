@@ -18,7 +18,7 @@
 - Auth: hand-rolled bcrypt + HMAC-SHA256-signed session cookie, implemented with the **Web Crypto API only** (`crypto.subtle`, `btoa`) — never Node's `crypto` module or `Buffer`. `middleware.ts` runs in the Edge runtime, which has neither; the same `src/lib/session.ts` code is shared between middleware (Edge) and route handlers (Node), so it must work in both.
 - Next.js dynamic route handlers: `params` is a `Promise` in this Next.js version — always `const { id } = await params;`, never destructure `params` directly.
 - No automated test framework this pass. Every task's verification step is a manual command (curl, psql, or a browser checklist for UI tasks) — run it and confirm the stated expected output before moving on.
-- Docker: dev-mode only. The `app` container runs `next dev` with the repo volume-mounted in (a named volume protects `node_modules` from being shadowed by the host mount). No production Dockerfile this pass.
+- Docker: dev-mode only — the `app` container runs `next dev`, not a production build. **No source bind-mount**: this environment's Docker Desktop cannot bind-mount its WSL distro (confirmed broken even for a fresh scratch file, after restarting Docker Desktop and re-checking the WSL Integration toggle), so source is copied into the image at build time instead of live-mounted. This means **every code change requires `docker compose up -d --build`** (not `docker compose restart app`) to take effect — every task's verification steps in this plan already use `--build` for this reason. No production Dockerfile beyond this.
 - Seed data: exactly 4 users (`ashoka`, `anulome`, `arvin`, `jason`), one shared password from the `SEED_PASSWORD` env var (no default value committed anywhere). No cards, comments, or links are seeded.
 - Cut entirely: no Environments view, model, or route.
 - Resources and Usage: a nav link and a page that renders "In development" — no data model, no CRUD.
@@ -258,14 +258,10 @@ services:
       NODE_ENV: development
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      - app-node-modules:/app/node_modules
     command: npm run dev
 
 volumes:
   db-data:
-  app-node-modules:
 ```
 
 - [ ] **Step 3: Write `.dockerignore`**
@@ -681,7 +677,7 @@ export const config = {
 - [ ] **Step 6: Verify**
 
 ```bash
-docker compose restart app
+docker compose up -d --build
 sleep 3
 
 # Unauthenticated request redirects to /login
@@ -916,7 +912,7 @@ export async function GET() {
 - [ ] **Step 5: Verify** (reuse the cookie jar from Task 5's Step 6)
 
 ```bash
-docker compose restart app
+docker compose up -d --build
 sleep 3
 
 curl -s -X POST http://localhost:3000/api/cards -b /tmp/taproom-cookies.txt \
@@ -1001,7 +997,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 - [ ] **Step 3: Verify** (using the test card `id` from Task 6)
 
 ```bash
-docker compose restart app
+docker compose up -d --build
 sleep 3
 
 curl -s -X POST http://localhost:3000/api/cards/<id>/comments -b /tmp/taproom-cookies.txt \
@@ -1078,7 +1074,7 @@ export async function GET() {
 - [ ] **Step 2: Verify** (continuing from Task 6's test card, still assigned to nobody and in "In Progress")
 
 ```bash
-docker compose restart app
+docker compose up -d --build
 sleep 3
 
 # Assign the test card to jason (get his id first)
