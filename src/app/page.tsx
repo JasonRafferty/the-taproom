@@ -1,3 +1,5 @@
-export default function Placeholder() {
-  return <p>The Taproom — scaffold OK.</p>;
+import HomeView from "@/components/Home/HomeView";
+
+export default function HomePage() {
+  return <HomeView />;
 }
