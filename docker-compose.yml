@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taproom
+      POSTGRES_PASSWORD: taproom
+      POSTGRES_DB: taproom
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://taproom:taproom@db:5432/taproom
+      SESSION_SECRET: ${SESSION_SECRET}
+      SEED_PASSWORD: ${SEED_PASSWORD}
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    command: npm run dev
+
+volumes:
+  db-data:
