@@ -1521,6 +1521,14 @@ function initials(name: string): string {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
+// The mockup's CSS uses abbreviated priority class suffixes (pri-med, not
+// pri-medium) — Priority.toLowerCase() alone doesn't match "MEDIUM".
+const PRIORITY_CLASS: Record<"LOW" | "MEDIUM" | "HIGH", string> = {
+  LOW: "pri-low",
+  MEDIUM: "pri-med",
+  HIGH: "pri-high",
+};
+
 export default function BoardView({
   boardType,
   label,
@@ -1578,7 +1586,8 @@ export default function BoardView({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ boardType, title: `Untitled ${label.slice(0, -1)}` }),
     });
-    setCards((prev) => [...prev, await res.json()]);
+    const created = await res.json();
+    setCards((prev) => [...prev, created]);
   }
 
   const selectedCard = cards.find((c) => c.id === selectedCardId) ?? null;
@@ -1659,7 +1668,7 @@ export default function BoardView({
                 {columnCards.map((card) => (
                   <div
                     key={card.id}
-                    className={`card ${card.priority ? `pri-${card.priority.toLowerCase()}` : ""}`}
+                    className={`card ${card.priority ? PRIORITY_CLASS[card.priority] : ""}`}
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData("text/plain", card.id)}
                     onClick={() => setSelectedCardId(card.id)}
@@ -1773,7 +1782,8 @@ export default function CommentThread({ cardId }: { cardId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
-    setComments((prev) => [...prev, await res.json()]);
+    const created = await res.json();
+    setComments((prev) => [...prev, created]);
     setText("");
   }
 
