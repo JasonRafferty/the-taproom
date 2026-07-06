@@ -456,10 +456,18 @@ docker compose exec db psql -U taproom -d taproom -c '\dt'
 
 Expected: a table list including `User`, `Card`, `Comment`, `Link`, `_prisma_migrations`.
 
-Also verify the adapter-based client actually works (this is the real deliverable — a raw `psql` check alone does not exercise `PrismaClient`):
+Also verify the adapter-based client actually works (this is the real deliverable — a raw `psql` check alone does not exercise `PrismaClient`). `tsx -e` has a CJS/ESM interop quirk that hides named exports, so use a small script file instead of an inline `-e` one-liner:
 
 ```bash
-docker compose exec app npx tsx -e "import('./src/lib/db').then(async ({ prisma }) => { console.log(await prisma.user.findMany()); await prisma.\$disconnect(); })"
+cat > /tmp/verify-prisma.mjs <<'EOF'
+import { prisma } from "/app/src/lib/db.ts";
+const users = await prisma.user.findMany();
+console.log(users);
+await prisma.$disconnect();
+EOF
+docker compose cp /tmp/verify-prisma.mjs app:/app/verify-prisma.mjs
+docker compose exec app npx tsx /app/verify-prisma.mjs
+docker compose exec app rm -f /app/verify-prisma.mjs
 ```
 
 Expected: `[]` (empty array — no users seeded yet), with no thrown error.
