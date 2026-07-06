@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { BOARD_COLUMNS, EMPTY_COLUMN_MESSAGE, type BoardType } from "@/lib/boards";
+import CardModal from "./CardModal";
 
 type User = { id: string; username: string; displayName: string; avatarColor: string };
 
@@ -198,20 +199,15 @@ export default function BoardView({
       </div>
 
       {selectedCard && (
-        <div className="modal-backdrop is-open" onClick={() => setSelectedCardId(null)}>
-          <div className="modal is-open" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <p className="modal-eyebrow">
-                {label} · {selectedCard.column}
-              </p>
-              <button className="modal-close" type="button" onClick={() => setSelectedCardId(null)}>
-                ×
-              </button>
-            </div>
-            <h2>{selectedCard.title}</h2>
-            <p>{selectedCard.description}</p>
-          </div>
-        </div>
+        <CardModal
+          card={selectedCard}
+          boardLabel={label}
+          users={users}
+          onClose={() => setSelectedCardId(null)}
+          onUpdated={(updated) =>
+            setCards((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)))
+          }
+        />
       )}
     </section>
   );
