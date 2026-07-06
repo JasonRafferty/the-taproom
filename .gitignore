@@ -1,5 +1,6 @@
-node_modules
-.next
+# Next.js / Node
+node_modules/
+.next/
 .env
 .env.local
 *.log
