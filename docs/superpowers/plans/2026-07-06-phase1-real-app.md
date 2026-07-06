@@ -25,6 +25,7 @@
 - Cut entirely: no Environments view, model, or route.
 - Resources and Usage: a nav link and a page that renders "In development" — no data model, no CRUD.
 - Package manager: npm (not pnpm/yarn).
+- Any Prisma query that embeds a `User` relation in an API response must project only safe fields (`id`, `username`, `displayName`, `avatarColor` — the `USER_SUMMARY_SELECT` constant in `@/lib/boards`, added in Task 6). Never `include: { assignee: true }`/`{ createdBy: true }`/`{ author: true }` with a bare `true` — that serializes `passwordHash` into the response. All 4 accounts share one password, so any single leaked hash compromises every account.
 
 ---
 
@@ -775,10 +776,10 @@ git commit -m "Add hand-rolled session auth and route protection"
 **Interfaces:**
 - Consumes: `Card`/`User` models (Task 3), `getCurrentUser()` (Task 5).
 - Produces:
-  - `BOARD_COLUMNS`, `TERMINAL_COLUMN`, `BOARD_LABELS`, `BOARD_PURPOSE`, `BOARD_SLUGS`, `EMPTY_COLUMN_MESSAGE`, `isBoardType()`, `slugToBoardType()` from `@/lib/boards`.
-  - `GET /api/cards?boardType=BUG|FEATURE|TASK` → array of non-archived cards with `assignee`/`createdBy` included.
+  - `BOARD_COLUMNS`, `TERMINAL_COLUMN`, `BOARD_LABELS`, `BOARD_PURPOSE`, `BOARD_SLUGS`, `EMPTY_COLUMN_MESSAGE`, `isBoardType()`, `slugToBoardType()`, `USER_SUMMARY_SELECT` from `@/lib/boards`. **Every place a `User` relation is embedded in an API response uses `{ select: USER_SUMMARY_SELECT }`, never `{ assignee: true }`/`{ createdBy: true }`/`{ author: true }`** — a bare `true` include serializes `passwordHash` straight into the JSON response, and since all 4 accounts share one password, leaking any single hash compromises every account.
+  - `GET /api/cards?boardType=BUG|FEATURE|TASK` → array of non-archived cards with `assignee`/`createdBy` included (safe fields only, via `USER_SUMMARY_SELECT`).
   - `POST /api/cards` — body `{ boardType, title, description?, assigneeId?, priority?, dueDate? }` → `201` created card (column defaults to the board's first column).
-  - `GET /api/cards/:id` → single card with `assignee`, `createdBy`, `comments` (with `author`).
+  - `GET /api/cards/:id` → single card with `assignee`, `createdBy`, `comments` (with `author`) — all `User` fields safe-projected.
   - `PATCH /api/cards/:id` — body: any subset of `{ column, title, description, assigneeId, priority, dueDate, archived }` → `200` updated card.
   - `GET /api/users` → array of `{ id, username, displayName, avatarColor }`.
 
@@ -847,6 +848,18 @@ export function slugToBoardType(slug: string): BoardType | null {
   const entry = (Object.entries(BOARD_SLUGS) as [BoardType, string][]).find(([, s]) => s === slug);
   return entry ? entry[0] : null;
 }
+
+// Safe subset of User fields for embedding in Card/Comment API responses.
+// Never include the full User relation directly (`assignee: true`) — that
+// serializes passwordHash straight into the JSON response body. All 4
+// accounts share one password, so leaking any single hash compromises
+// every account, not just one.
+export const USER_SUMMARY_SELECT = {
+  id: true,
+  username: true,
+  displayName: true,
+  avatarColor: true,
+} as const;
 ```
 
 - [ ] **Step 2: Write `src/app/api/cards/route.ts`**
@@ -855,7 +868,7 @@ export function slugToBoardType(slug: string): BoardType | null {
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isBoardType, BOARD_COLUMNS } from "@/lib/boards";
+import { isBoardType, BOARD_COLUMNS, USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function GET(request: NextRequest) {
   const boardType = request.nextUrl.searchParams.get("boardType");
@@ -867,7 +880,10 @@ export async function GET(request: NextRequest) {
   }
   const cards = await prisma.card.findMany({
     where: { boardType, archived: false },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(cards);
@@ -895,7 +911,10 @@ export async function POST(request: NextRequest) {
       dueDate: body?.dueDate ? new Date(body.dueDate) : null,
       createdById: user.id,
     },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
   });
   return NextResponse.json(card, { status: 201 });
 }
@@ -906,16 +925,19 @@ export async function POST(request: NextRequest) {
 ```ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { BOARD_COLUMNS } from "@/lib/boards";
+import { BOARD_COLUMNS, USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const card = await prisma.card.findUnique({
     where: { id },
     include: {
-      assignee: true,
-      createdBy: true,
-      comments: { include: { author: true }, orderBy: { createdAt: "asc" } },
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+      comments: {
+        include: { author: { select: USER_SUMMARY_SELECT } },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
@@ -945,7 +967,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
       ...(body.archived !== undefined && { archived: body.archived }),
     },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
   });
   return NextResponse.json(card);
 }
@@ -956,10 +981,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 ```ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function GET() {
   const users = await prisma.user.findMany({
-    select: { id: true, username: true, displayName: true, avatarColor: true },
+    select: USER_SUMMARY_SELECT,
     orderBy: { displayName: "asc" },
   });
   return NextResponse.json(users);
@@ -1013,6 +1039,7 @@ git commit -m "Add board constants and Card/User API routes"
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -1030,7 +1057,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const comment = await prisma.comment.create({
     data: { cardId: id, authorId: user.id, text: text.trim() },
-    include: { author: true },
+    include: { author: { select: USER_SUMMARY_SELECT } },
   });
   return NextResponse.json(comment, { status: 201 });
 }
