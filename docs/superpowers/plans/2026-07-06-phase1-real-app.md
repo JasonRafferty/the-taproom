@@ -16,7 +16,8 @@
 - This project is on Prisma 7: `PrismaClient` requires an explicit driver adapter (`@prisma/adapter-pg`, installed in Task 3) — `new PrismaClient()` with no arguments throws. The CLI (`migrate`, `studio`) reads connection info from `prisma.config.ts`, not from `schema.prisma`'s `datasource.url`. Every place that needs a Prisma client imports the one singleton from `@/lib/db` (or `../src/lib/db` from scripts outside Next's path-alias resolution) rather than constructing a new one.
 - TypeScript throughout. Path alias `@/*` → `./src/*`.
 - Styling: plain CSS ported from the mockup into `src/app/globals.css`. No Tailwind, no CSS-in-JS.
-- Auth: hand-rolled bcrypt + HMAC-SHA256-signed session cookie, implemented with the **Web Crypto API only** (`crypto.subtle`, `btoa`) — never Node's `crypto` module or `Buffer`. `middleware.ts` runs in the Edge runtime, which has neither; the same `src/lib/session.ts` code is shared between middleware (Edge) and route handlers (Node), so it must work in both.
+- Auth: hand-rolled bcrypt + HMAC-SHA256-signed session cookie, implemented with the **Web Crypto API only** (`crypto.subtle`, `btoa`) — never Node's `crypto` module or `Buffer`. `src/middleware.ts` runs in the Edge runtime, which has neither; the same `src/lib/session.ts` code is shared between middleware (Edge) and route handlers (Node), so it must work in both.
+- Middleware file location: `src/middleware.ts`, **not** a repo-root `middleware.ts`. This project uses the `src/` directory layout, and this Next.js version resolves middleware relative to that directory — a root-level `middleware.ts` is silently never invoked (no error, just a no-op).
 - Next.js dynamic route handlers: `params` is a `Promise` in this Next.js version — always `const { id } = await params;`, never destructure `params` directly.
 - No automated test framework this pass. Every task's verification step is a manual command (curl, psql, or a browser checklist for UI tasks) — run it and confirm the stated expected output before moving on.
 - Docker: dev-mode only — the `app` container runs `next dev`, not a production build. **No source bind-mount**: this environment's Docker Desktop cannot bind-mount its WSL distro (confirmed broken even for a fresh scratch file, after restarting Docker Desktop and re-checking the WSL Integration toggle), so source is copied into the image at build time instead of live-mounted. This means **every code change requires `docker compose up -d --build`** (not `docker compose restart app`) to take effect — every task's verification steps in this plan already use `--build` for this reason. No production Dockerfile beyond this.
@@ -38,7 +39,7 @@ the-taproom/
 ├── package.json
 ├── tsconfig.json
 ├── next.config.js
-├── middleware.ts              # route protection (Edge runtime)
+├── src/middleware.ts           # route protection (Edge runtime)
 ├── prisma.config.ts            # Prisma 7 CLI config (datasource URL, migrations path)
 ├── prisma/
 │   ├── schema.prisma          # User, Card, Comment, Link models
@@ -226,9 +227,12 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
+RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 ```
+
+The `prisma generate` step must come after `COPY . .`, not rely on `npm install`'s postinstall hook — at `npm install` time only `package.json`/`package-lock.json` exist in the build context, so `prisma/schema.prisma` isn't there yet and generation silently no-ops. `prisma generate` only reads the schema to produce client code; it doesn't connect to a database, so the placeholder `DATABASE_URL` is fine here.
 
 - [ ] **Step 2: Write `docker-compose.yml`**
 
@@ -558,7 +562,7 @@ git commit -m "Add seed script for the 4 founder accounts"
 ### Task 5: Auth (session lib, login/logout routes, middleware)
 
 **Files:**
-- Create: `src/lib/session.ts`, `src/lib/auth.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/logout/route.ts`, `middleware.ts`
+- Create: `src/lib/session.ts`, `src/lib/auth.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/logout/route.ts`, `src/middleware.ts`
 
 **Interfaces:**
 - Consumes: `User` model (Task 3), `SESSION_SECRET` env var (Task 2).
@@ -567,7 +571,7 @@ git commit -m "Add seed script for the 4 founder accounts"
   - `getCurrentUser(): Promise<User | null>` from `@/lib/auth` — this is the contract Task 9 builds against in parallel.
   - `POST /api/auth/login` — body `{ username: string, password: string }` → `200 { ok: true, displayName: string }` + `Set-Cookie` on success, `401 { error: string }` on failure.
   - `POST /api/auth/logout` — clears the cookie, redirects to `/login`.
-  - `middleware.ts` — redirects unauthenticated page requests to `/login`, returns `401` JSON for unauthenticated `/api/*` requests. `/login` and `/api/auth/login` are public.
+  - `src/middleware.ts` — redirects unauthenticated page requests to `/login`, returns `401` JSON for unauthenticated `/api/*` requests. `/login` and `/api/auth/login` are public.
 
 - [ ] **Step 1: Write `src/lib/session.ts`**
 
@@ -691,7 +695,7 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 5: Write `middleware.ts`** (repo root, next to `package.json`)
+- [ ] **Step 5: Write `src/middleware.ts`** (next to `src/app/`, not the repo root — this Next.js version resolves middleware relative to the `src/` directory)
 
 ```ts
 import { NextRequest, NextResponse } from "next/server";
@@ -751,7 +755,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/auth/
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/lib/session.ts src/lib/auth.ts src/app/api/auth middleware.ts
+git add src/lib/session.ts src/lib/auth.ts src/app/api/auth src/middleware.ts
 git commit -m "Add hand-rolled session auth and route protection"
 ```
 
