@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { BOARD_COLUMNS } from "@/lib/boards";
+import { BOARD_COLUMNS, USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const card = await prisma.card.findUnique({
     where: { id },
     include: {
-      assignee: true,
-      createdBy: true,
-      comments: { include: { author: true }, orderBy: { createdAt: "asc" } },
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+      comments: {
+        include: { author: { select: USER_SUMMARY_SELECT } },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
@@ -39,7 +42,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
       ...(body.archived !== undefined && { archived: body.archived }),
     },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
   });
   return NextResponse.json(card);
 }

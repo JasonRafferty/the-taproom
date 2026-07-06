@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isBoardType, BOARD_COLUMNS } from "@/lib/boards";
+import { isBoardType, BOARD_COLUMNS, USER_SUMMARY_SELECT } from "@/lib/boards";
 
 export async function GET(request: NextRequest) {
   const boardType = request.nextUrl.searchParams.get("boardType");
@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
   }
   const cards = await prisma.card.findMany({
     where: { boardType, archived: false },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(cards);
@@ -41,7 +44,10 @@ export async function POST(request: NextRequest) {
       dueDate: body?.dueDate ? new Date(body.dueDate) : null,
       createdById: user.id,
     },
-    include: { assignee: true, createdBy: true },
+    include: {
+      assignee: { select: USER_SUMMARY_SELECT },
+      createdBy: { select: USER_SUMMARY_SELECT },
+    },
   });
   return NextResponse.json(card, { status: 201 });
 }

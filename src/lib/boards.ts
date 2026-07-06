@@ -60,3 +60,10 @@ export function slugToBoardType(slug: string): BoardType | null {
   const entry = (Object.entries(BOARD_SLUGS) as [BoardType, string][]).find(([, s]) => s === slug);
   return entry ? entry[0] : null;
 }
+
+export const USER_SUMMARY_SELECT = {
+  id: true,
+  username: true,
+  displayName: true,
+  avatarColor: true,
+} as const;
