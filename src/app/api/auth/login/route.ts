@@ -3,6 +3,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 
+// Bcrypt hash of an arbitrary fixed string, unrelated to any real password.
+// Used only to keep bcrypt.compare's timing constant when the username
+// doesn't exist, so login can't be used to enumerate valid usernames.
+const DUMMY_HASH = "$2a$10$CwTycUXWue0Thq9StjUM0uJ8jL2/hlIeQ6R4kFtVi.EM2X3jSt4nO";
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const username = body?.username;
@@ -12,7 +17,8 @@ export async function POST(request: NextRequest) {
   }
 
   const user = await prisma.user.findUnique({ where: { username } });
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  const valid = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
+  if (!user || !valid) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
