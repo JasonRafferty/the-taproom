@@ -16,7 +16,6 @@ export default async function BoardPage({ params }: { params: Promise<{ slug: st
       boardType={boardType}
       label={BOARD_LABELS[boardType]}
       purpose={BOARD_PURPOSE[boardType]}
-      currentUserId={user.id}
     />
   );
 }

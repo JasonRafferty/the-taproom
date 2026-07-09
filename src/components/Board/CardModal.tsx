@@ -2,9 +2,24 @@
 
 import { useState } from "react";
 import CommentThread from "./CommentThread";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Card } from "./BoardView";
 
 type User = { id: string; username: string; displayName: string; avatarColor: string };
+
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M2.5 4.5h11M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5M6.5 7.5v4M9.5 7.5v4M3.5 4.5l.6 8.2a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-8.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function CardModal({
   card,
@@ -12,15 +27,18 @@ export default function CardModal({
   users,
   onClose,
   onUpdated,
+  onDeleted,
 }: {
   card: Card;
   boardLabel: string;
   users: User[];
   onClose: () => void;
   onUpdated: (card: Card) => void;
+  onDeleted: (cardId: string) => void;
 }) {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function patch(fields: Record<string, unknown>) {
     const res = await fetch(`/api/cards/${card.id}`, {
@@ -31,6 +49,11 @@ export default function CardModal({
     onUpdated(await res.json());
   }
 
+  async function remove() {
+    await fetch(`/api/cards/${card.id}`, { method: "DELETE" });
+    onDeleted(card.id);
+  }
+
   return (
     <div className="modal-backdrop is-open" onClick={onClose}>
       <div className="modal is-open" onClick={(e) => e.stopPropagation()}>
@@ -38,9 +61,19 @@ export default function CardModal({
           <p className="modal-eyebrow">
             {boardLabel} · {card.column}
           </p>
-          <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <div className="modal-head-actions">
+            <button
+              className="icon-btn is-danger"
+              type="button"
+              aria-label="Delete card"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              <TrashIcon />
+            </button>
+            <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          </div>
         </div>
 
         <input
@@ -105,6 +138,16 @@ export default function CardModal({
           <CommentThread cardId={card.id} />
         </div>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this card?"
+          message={`"${card.title}" will be permanently deleted, including its comments.`}
+          confirmLabel="Delete card"
+          onConfirm={remove}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </div>
   );
 }

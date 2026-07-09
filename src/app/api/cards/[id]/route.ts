@@ -49,3 +49,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
   return NextResponse.json(card);
 }
+
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const existing = await prisma.card.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  await prisma.card.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

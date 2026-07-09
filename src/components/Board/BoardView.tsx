@@ -36,12 +36,10 @@ export default function BoardView({
   boardType,
   label,
   purpose,
-  currentUserId,
 }: {
   boardType: BoardType;
   label: string;
   purpose: string;
-  currentUserId: string;
 }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -112,13 +110,6 @@ export default function BoardView({
         <div className="filter-row">
           <button className={`filter-chip ${filter === "all" ? "is-active" : ""}`} onClick={() => setFilter("all")} type="button">
             All
-          </button>
-          <button
-            className={`filter-chip ${filter === currentUserId ? "is-active" : ""}`}
-            onClick={() => setFilter(currentUserId)}
-            type="button"
-          >
-            Mine
           </button>
           {users.map((u) => (
             <button
@@ -207,6 +198,10 @@ export default function BoardView({
           onUpdated={(updated) =>
             setCards((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)))
           }
+          onDeleted={(cardId) => {
+            setCards((prev) => prev.filter((c) => c.id !== cardId));
+            setSelectedCardId(null);
+          }}
         />
       )}
     </section>
