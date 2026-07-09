@@ -55,11 +55,23 @@ export default function HomeView() {
         </div>
       </header>
 
-      <div className="panel">
-        <h2>Got something on your mind?</h2>
-        <form onSubmit={handleCapture} className="quick-capture">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?" />
-          <select value={captureType} onChange={(e) => setCaptureType(e.target.value as BoardType)}>
+      <div className="capture-panel">
+        <div>
+          <h2>Got something on your mind?</h2>
+          <p className="panel-note">Capture it before it disappears.</p>
+        </div>
+        <form onSubmit={handleCapture} className="capture-row">
+          <input
+            className="capture-input"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What needs doing?"
+          />
+          <select
+            className="capture-select"
+            value={captureType}
+            onChange={(e) => setCaptureType(e.target.value as BoardType)}
+          >
             <option value="BUG">Bug</option>
             <option value="FEATURE">Feature idea</option>
             <option value="TASK">Task</option>
