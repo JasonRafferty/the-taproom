@@ -90,6 +90,7 @@ export default function Sidebar({
   return (
     <aside className="rail" aria-label="Primary navigation">
       <div className="rail-brand">
+        <img className="rail-mark" src="/assets/siply-logo-rating.png" alt="" aria-hidden="true" />
         <div>
           <p className="rail-name">The&nbsp;Taproom</p>
           <p className="rail-sub">Siply internal hub</p>

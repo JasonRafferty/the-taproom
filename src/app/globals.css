@@ -80,9 +80,9 @@
   .rail-link {
     display: flex; align-items: center; gap: 10px; background: transparent; border: 1px solid transparent;
     color: var(--mist); text-align: left; padding: 9px 10px; border-radius: var(--radius);
-    font-size: 14px; font-weight: 600; cursor: pointer; width: 100%;
+    font-size: 15.5px; font-weight: 600; cursor: pointer; width: 100%; text-decoration: none;
   }
-  .rail-link.board-link { padding-left: 20px; font-size: 13.5px; }
+  .rail-link.board-link { padding-left: 20px; font-size: 15px; }
   .rail-link svg { flex: none; opacity: 0.85; }
   .rail-link:hover { background: var(--card); color: var(--ink); }
   .rail-link.is-active { background: var(--card); color: var(--accent); border-color: var(--line); }
