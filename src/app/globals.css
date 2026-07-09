@@ -67,7 +67,7 @@
 
   .rail-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
   .rail-mark {
-    width: 34px; height: 34px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
+    width: 40px; height: 40px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
     padding: 5px; object-fit: contain; flex: none;
   }
   .rail-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: 0.03em; text-transform: uppercase; }
@@ -80,9 +80,9 @@
   .rail-link {
     display: flex; align-items: center; gap: 10px; background: transparent; border: 1px solid transparent;
     color: var(--mist); text-align: left; padding: 9px 10px; border-radius: var(--radius);
-    font-size: 15.5px; font-weight: 600; cursor: pointer; width: 100%; text-decoration: none;
+    font-size: 16.5px; font-weight: 600; cursor: pointer; width: 100%; text-decoration: none;
   }
-  .rail-link.board-link { padding-left: 20px; font-size: 15px; }
+  .rail-link.board-link { padding-left: 20px; font-size: 16px; }
   .rail-link svg { flex: none; opacity: 0.85; }
   .rail-link:hover { background: var(--card); color: var(--ink); }
   .rail-link.is-active { background: var(--card); color: var(--accent); border-color: var(--line); }
@@ -150,7 +150,7 @@
   @media (max-width: 980px) { .home-showcase { grid-template-columns: 1fr; } }
 
   .fun-panel {
-    min-height: 340px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    min-height: 460px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
     background:
       linear-gradient(120deg, rgba(208,255,20,0.08), transparent 36%),
       linear-gradient(300deg, rgba(108,36,76,0.28), transparent 38%),

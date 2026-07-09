@@ -9,7 +9,7 @@ function initials(name: string): string {
 
 function HomeIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M2 7.5L8 2l6 5.5M3.5 6.5V14h9V6.5"
         stroke="currentColor"
@@ -23,7 +23,7 @@ function HomeIcon() {
 
 function ResourcesIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M3 3.2C3 2.9 3.3 2.7 3.6 2.8c1.5.4 3 1.1 4.4 2 1.4-.9 2.9-1.6 4.4-2 .3-.1.6.1.6.4v9c0 .2-.2.4-.4.5-1.5.4-2.9 1-4.2 1.9a.6.6 0 01-.8 0c-1.3-.9-2.7-1.5-4.2-1.9-.2-.1-.4-.3-.4-.5v-9z"
         stroke="currentColor"
@@ -37,7 +37,7 @@ function ResourcesIcon() {
 
 function UsageIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M2.5 13.5V3M2.5 13.5H13.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
       <rect x="5" y="8.5" width="2" height="4" fill="currentColor" />
       <rect x="8.2" y="6" width="2" height="6.5" fill="currentColor" />
@@ -48,7 +48,7 @@ function UsageIcon() {
 
 const BOARD_ICON: Record<BoardType, React.ReactNode> = {
   BUG: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <circle cx="8" cy="9" r="4" stroke="currentColor" strokeWidth="1.4" />
       <path
         d="M8 5V3M5 5.5L3.5 4M11 5.5L12.5 4M4 9H2M14 9h-2"
@@ -59,7 +59,7 @@ const BOARD_ICON: Record<BoardType, React.ReactNode> = {
     </svg>
   ),
   FEATURE: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M8 2l1.6 3.6L13 7l-3.4 1.4L8 12l-1.6-3.6L3 7l3.4-1.4L8 2z"
         stroke="currentColor"
@@ -69,7 +69,7 @@ const BOARD_ICON: Record<BoardType, React.ReactNode> = {
     </svg>
   ),
   TASK: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <rect x="2.5" y="2.5" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.4" />
       <path
         d="M5.5 8.2l1.7 1.7 3.3-3.6"
