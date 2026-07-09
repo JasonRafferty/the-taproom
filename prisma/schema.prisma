@@ -18,6 +18,13 @@ enum Priority {
   HIGH
 }
 
+enum DecisionStatus {
+  OPEN
+  DISCUSS
+  BLOCKING
+  RESOLVED
+}
+
 model User {
   id            String    @id @default(cuid())
   username      String    @unique
@@ -28,6 +35,7 @@ model User {
   assignedCards Card[]    @relation("CardAssignee")
   comments      Comment[]
   links         Link[]
+  decisions     Decision[] @relation("DecisionOwner")
   createdAt     DateTime  @default(now())
 }
 
@@ -67,4 +75,15 @@ model Link {
   addedBy   User     @relation(fields: [addedById], references: [id])
   addedById String
   createdAt DateTime @default(now())
+}
+
+model Decision {
+  id        String         @id @default(cuid())
+  title     String
+  note      String?
+  owner     User?          @relation("DecisionOwner", fields: [ownerId], references: [id])
+  ownerId   String?
+  status    DecisionStatus @default(OPEN)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
