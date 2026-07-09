@@ -300,6 +300,7 @@ export default function DecisionsPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) return;
       const updated = await res.json();
       setDecisions((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
     } else {
@@ -308,6 +309,7 @@ export default function DecisionsPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) return;
       const created = await res.json();
       setDecisions((prev) => [...prev, created]);
     }
@@ -315,16 +317,18 @@ export default function DecisionsPanel() {
   }
 
   async function resolve(id: string) {
-    await fetch(`/api/decisions/${id}`, {
+    const res = await fetch(`/api/decisions/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "RESOLVED" }),
     });
+    if (!res.ok) return;
     setDecisions((prev) => prev.filter((d) => d.id !== id)); // resolved drops off the "needed" list
   }
 
   async function remove(id: string) {
-    await fetch(`/api/decisions/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/decisions/${id}`, { method: "DELETE" });
+    if (!res.ok) return;
     setDecisions((prev) => prev.filter((d) => d.id !== id));
   }
 
@@ -344,7 +348,11 @@ export default function DecisionsPanel() {
       </div>
 
       {showForm && (
-        <form className="decision-form" onSubmit={save}>
+        // .decision-form is `display: none` by default in the ported mockup
+        // CSS — only `.decision-form.is-open` is `display: grid`. Since this
+        // element only exists in the DOM while showForm is true, "is-open"
+        // applies unconditionally within this branch.
+        <form className="decision-form is-open" onSubmit={save}>
           <div className="decision-form-grid">
             <input
               className="decision-input"
