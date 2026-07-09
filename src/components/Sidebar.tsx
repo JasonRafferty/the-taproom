@@ -1,4 +1,8 @@
+"use client";
+
+import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BOARD_LABELS, BOARD_SLUGS, type BoardType } from "@/lib/boards";
 
 const BOARD_ORDER: BoardType[] = ["BUG", "FEATURE", "TASK"];
@@ -87,10 +91,20 @@ export default function Sidebar({
 }: {
   currentUser: { displayName: string; avatarColor: string };
 }) {
+  const pathname = usePathname();
+
   return (
     <aside className="rail" aria-label="Primary navigation">
       <div className="rail-brand">
-        <img className="rail-mark" src="/assets/siply-logo-rating.png" alt="" aria-hidden="true" />
+        <Image
+          className="rail-mark"
+          src="/assets/siply-logo-rating.png"
+          alt=""
+          aria-hidden="true"
+          width={1024}
+          height={1024}
+          priority
+        />
         <div>
           <p className="rail-name">The&nbsp;Taproom</p>
           <p className="rail-sub">Siply internal hub</p>
@@ -98,7 +112,7 @@ export default function Sidebar({
       </div>
       <nav className="rail-nav">
         <div className="rail-group">
-          <Link className="rail-link" href="/">
+          <Link className={`rail-link ${pathname === "/" ? "is-active" : ""}`} href="/" aria-current={pathname === "/" ? "page" : undefined}>
             <HomeIcon />
             Home
           </Link>
@@ -106,18 +120,33 @@ export default function Sidebar({
         <div className="rail-group">
           <p className="rail-group-label">Boards</p>
           {BOARD_ORDER.map((boardType) => (
-            <Link key={boardType} className="rail-link board-link" href={`/boards/${BOARD_SLUGS[boardType]}`}>
+            <Link
+              key={boardType}
+              className={`rail-link board-link ${
+                pathname === `/boards/${BOARD_SLUGS[boardType]}` ? "is-active" : ""
+              }`}
+              href={`/boards/${BOARD_SLUGS[boardType]}`}
+              aria-current={pathname === `/boards/${BOARD_SLUGS[boardType]}` ? "page" : undefined}
+            >
               {BOARD_ICON[boardType]}
               {BOARD_LABELS[boardType]}
             </Link>
           ))}
         </div>
         <div className="rail-group">
-          <Link className="rail-link" href="/resources">
+          <Link
+            className={`rail-link ${pathname === "/resources" ? "is-active" : ""}`}
+            href="/resources"
+            aria-current={pathname === "/resources" ? "page" : undefined}
+          >
             <ResourcesIcon />
             Resources
           </Link>
-          <Link className="rail-link" href="/usage">
+          <Link
+            className={`rail-link ${pathname === "/usage" ? "is-active" : ""}`}
+            href="/usage"
+            aria-current={pathname === "/usage" ? "page" : undefined}
+          >
             <UsageIcon />
             Usage
           </Link>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isBoardType, BOARD_COLUMNS, USER_SUMMARY_SELECT } from "@/lib/boards";
+import { createCardSchema, formatZodError } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   const boardType = request.nextUrl.searchParams.get("boardType");
@@ -27,21 +28,26 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  const boardType = body?.boardType;
-  const title = body?.title;
-  if (!boardType || !isBoardType(boardType) || typeof title !== "string" || !title.trim()) {
-    return NextResponse.json({ error: "boardType and non-empty title are required" }, { status: 400 });
+  const parsed = createCardSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+  }
+
+  const data = parsed.data;
+  if (data.assigneeId) {
+    const assignee = await prisma.user.findUnique({ where: { id: data.assigneeId }, select: { id: true } });
+    if (!assignee) return NextResponse.json({ error: "Assignee not found" }, { status: 400 });
   }
 
   const card = await prisma.card.create({
     data: {
-      boardType,
-      title: title.trim(),
-      column: BOARD_COLUMNS[boardType][0],
-      description: body?.description ?? null,
-      assigneeId: body?.assigneeId ?? null,
-      priority: body?.priority ?? null,
-      dueDate: body?.dueDate ? new Date(body.dueDate) : null,
+      boardType: data.boardType,
+      title: data.title,
+      column: BOARD_COLUMNS[data.boardType][0],
+      description: data.description ?? null,
+      assigneeId: data.assigneeId ?? null,
+      priority: data.priority ?? null,
+      dueDate: data.dueDate ?? null,
       createdById: user.id,
     },
     include: {

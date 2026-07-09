@@ -3,8 +3,12 @@ import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 
 const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/assets/")) {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PATHS.has(pathname)) {
     return NextResponse.next();
   }

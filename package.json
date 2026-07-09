@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run prisma:generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:placeholder@localhost:5432/placeholder} prisma generate",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio"
   },
@@ -22,7 +24,8 @@
     "next": "^16.2.10",
     "pg": "^8.22.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
@@ -30,7 +33,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.4",
+    "eslint": "9.39.4",
     "eslint-config-next": "^16.2.10",
     "prisma": "^7.8.0",
     "tsx": "^4.23.0",

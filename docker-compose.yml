@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taproom -d taproom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
@@ -17,15 +22,16 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://taproom:taproom@db:5432/taproom
       SESSION_SECRET: ${SESSION_SECRET}
       SEED_PASSWORD: ${SEED_PASSWORD}
-      NODE_ENV: development
+      NODE_ENV: production
     ports:
       - "3000:3000"
-    command: npm run dev
+    command: sh -c "npm run prisma:migrate:deploy && npm run start"
 
 volumes:
   db-data:

@@ -55,6 +55,11 @@ model Card {
   comments    Comment[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([boardType, archived, createdAt])
+  @@index([assigneeId, archived])
+  @@index([dueDate])
+  @@index([updatedAt])
 }
 
 model Comment {
@@ -65,6 +70,8 @@ model Comment {
   authorId  String
   text      String
   createdAt DateTime @default(now())
+
+  @@index([cardId, createdAt])
 }
 
 model Link {
@@ -75,6 +82,8 @@ model Link {
   addedBy   User     @relation(fields: [addedById], references: [id])
   addedById String
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model Decision {
@@ -86,4 +95,6 @@ model Decision {
   status    DecisionStatus @default(OPEN)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+
+  @@index([status, createdAt])
 }

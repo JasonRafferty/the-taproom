@@ -17,31 +17,71 @@ export default function CommentThread({ cardId }: { cardId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/cards/${cardId}`)
-      .then((r) => r.json())
-      .then((card) => {
-        setComments(card.comments);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch(`/api/cards/${cardId}/comments`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error(await responseError(r, "Could not load comments."));
+        return r.json();
+      })
+      .then((loaded) => {
+        if (cancelled) return;
+        setComments(loaded);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Could not load comments.");
         setLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [cardId]);
+
+  async function responseError(res: Response, fallback: string) {
+    const data = await res.json().catch(() => null);
+    return data?.error ?? fallback;
+  }
 
   async function post() {
     if (!text.trim()) return;
-    const res = await fetch(`/api/cards/${cardId}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    const created = await res.json();
-    setComments((prev) => [...prev, created]);
-    setText("");
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/cards/${cardId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(await responseError(res, "Could not post comment."));
+      const created = await res.json();
+      setComments((prev) => [...prev, created]);
+      setText("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not post comment.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function remove(id: string) {
-    await fetch(`/api/comments/${id}`, { method: "DELETE" });
+    const previous = comments;
     setComments((prev) => prev.filter((c) => c.id !== id));
+    setError(null);
+    try {
+      const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await responseError(res, "Could not delete comment."));
+    } catch (err) {
+      setComments(previous);
+      setError(err instanceof Error ? err.message : "Could not delete comment.");
+    }
   }
 
   if (loading) return <p className="comment-empty">Loading comments…</p>;
@@ -49,6 +89,7 @@ export default function CommentThread({ cardId }: { cardId: string }) {
   return (
     <>
       <div className="comment-list">
+        {error && <p className="status-message is-error">{error}</p>}
         {comments.length === 0 && <p className="comment-empty">No comments yet.</p>}
         {comments.map((c) => (
           <div key={c.id}>
@@ -72,9 +113,10 @@ export default function CommentThread({ cardId }: { cardId: string }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a comment…"
+          disabled={saving}
         />
-        <button className="btn-primary comment-post" type="button" onClick={post}>
-          Post
+        <button className="btn-primary comment-post" type="button" onClick={post} disabled={saving}>
+          {saving ? "Posting..." : "Post"}
         </button>
       </div>
     </>

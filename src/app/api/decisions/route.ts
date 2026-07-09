@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { USER_SUMMARY_SELECT } from "@/lib/boards";
-
-const STATUSES = ["OPEN", "DISCUSS", "BLOCKING", "RESOLVED"] as const;
-type DecisionStatus = (typeof STATUSES)[number];
-function isStatus(v: unknown): v is DecisionStatus {
-  return typeof v === "string" && (STATUSES as readonly string[]).includes(v);
-}
+import { createDecisionSchema, formatZodError } from "@/lib/validation";
 
 export async function GET() {
   const decisions = await prisma.decision.findMany({
@@ -23,20 +18,23 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  const title = body?.title;
-  if (typeof title !== "string" || !title.trim()) {
-    return NextResponse.json({ error: "A non-empty title is required" }, { status: 400 });
+  const parsed = createDecisionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
   }
-  if (body?.status !== undefined && !isStatus(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+
+  const data = parsed.data;
+  if (data.ownerId) {
+    const owner = await prisma.user.findUnique({ where: { id: data.ownerId }, select: { id: true } });
+    if (!owner) return NextResponse.json({ error: "Owner not found" }, { status: 400 });
   }
 
   const decision = await prisma.decision.create({
     data: {
-      title: title.trim(),
-      note: typeof body?.note === "string" ? body.note : null,
-      ownerId: body?.ownerId ?? null,
-      status: body?.status ?? "OPEN",
+      title: data.title,
+      note: data.note ?? null,
+      ownerId: data.ownerId ?? null,
+      status: data.status ?? "OPEN",
     },
     include: { owner: { select: USER_SUMMARY_SELECT } },
   });

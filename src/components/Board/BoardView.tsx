@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BOARD_COLUMNS, EMPTY_COLUMN_MESSAGE, type BoardType } from "@/lib/boards";
 import CardModal from "./CardModal";
 
@@ -36,31 +36,32 @@ export default function BoardView({
   boardType,
   label,
   purpose,
+  initialCards,
+  initialUsers,
 }: {
   boardType: BoardType;
   label: string;
   purpose: string;
+  initialCards: Card[];
+  initialUsers: User[];
 }) {
-  const [cards, setCards] = useState<Card[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [cards, setCards] = useState<Card[]>(initialCards);
+  const [users, setUsers] = useState<User[]>(initialUsers);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadCards = useCallback(async () => {
-    const res = await fetch(`/api/cards?boardType=${boardType}`);
-    setCards(await res.json());
-    setLoading(false);
-  }, [boardType]);
+  const [creating, setCreating] = useState(false);
+  const [movingCardId, setMovingCardId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setCards(initialCards);
+    setUsers(initialUsers);
     setFilter("all");
     setSearch("");
-    setLoading(true);
-    loadCards();
-    fetch("/api/users").then((r) => r.json()).then(setUsers);
-  }, [boardType, loadCards]);
+    setSelectedCardId(null);
+    setError(null);
+  }, [boardType, initialCards, initialUsers]);
 
   const filtered = useMemo(
     () =>
@@ -72,28 +73,55 @@ export default function BoardView({
     [cards, filter, search]
   );
 
+  async function responseError(res: Response, fallback: string) {
+    const data = await res.json().catch(() => null);
+    return data?.error ?? fallback;
+  }
+
   async function moveCard(cardId: string, column: string) {
+    const previousCards = cards;
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, column } : c)));
-    await fetch(`/api/cards/${cardId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ column }),
-    });
+    setMovingCardId(cardId);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/cards/${cardId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ column }),
+      });
+      if (!res.ok) throw new Error(await responseError(res, "Could not move card."));
+      const updated = await res.json();
+      setCards((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+    } catch (err) {
+      setCards(previousCards);
+      setError(err instanceof Error ? err.message : "Could not move card.");
+    } finally {
+      setMovingCardId(null);
+    }
   }
 
   async function createCard() {
-    const res = await fetch("/api/cards", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ boardType, title: `Untitled ${label.slice(0, -1)}` }),
-    });
-    const card = await res.json();
-    setCards((prev) => [...prev, card]);
+    if (creating) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ boardType, title: `Untitled ${label.slice(0, -1)}` }),
+      });
+      if (!res.ok) throw new Error(await responseError(res, "Could not create card."));
+      const card = await res.json();
+      setCards((prev) => [...prev, card]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create card.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   const selectedCard = cards.find((c) => c.id === selectedCardId) ?? null;
-
-  if (loading) return <p className="page-purpose">Loading…</p>;
 
   return (
     <section>
@@ -102,9 +130,12 @@ export default function BoardView({
           <p className="eyebrow">Board</p>
           <h1>{label}</h1>
         </div>
-        <button className="btn-primary" type="button" onClick={createCard}>+ New card</button>
+        <button className="btn-primary" type="button" onClick={createCard} disabled={creating}>
+          {creating ? "Adding..." : "+ New card"}
+        </button>
       </header>
       <p className="page-purpose">{purpose}</p>
+      {error && <p className="status-message is-error">{error}</p>}
 
       <div className="board-toolbar">
         <div className="filter-row">
@@ -162,7 +193,9 @@ export default function BoardView({
                 {columnCards.map((card) => (
                   <div
                     key={card.id}
-                    className={`card ${card.priority ? PRIORITY_CLASS[card.priority] : ""}`}
+                    className={`card ${card.priority ? PRIORITY_CLASS[card.priority] : ""} ${
+                      movingCardId === card.id ? "is-saving" : ""
+                    }`}
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData("text/plain", card.id)}
                     onClick={() => setSelectedCardId(card.id)}

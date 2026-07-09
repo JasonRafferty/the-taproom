@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CommentThread from "./CommentThread";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Card } from "./BoardView";
@@ -39,19 +39,53 @@ export default function CardModal({
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  async function responseError(res: Response, fallback: string) {
+    const data = await res.json().catch(() => null);
+    return data?.error ?? fallback;
+  }
 
   async function patch(fields: Record<string, unknown>) {
-    const res = await fetch(`/api/cards/${card.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fields),
-    });
-    onUpdated(await res.json());
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/cards/${card.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) throw new Error(await responseError(res, "Could not save card."));
+      onUpdated(await res.json());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save card.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function remove() {
-    await fetch(`/api/cards/${card.id}`, { method: "DELETE" });
-    onDeleted(card.id);
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/cards/${card.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await responseError(res, "Could not delete card."));
+      onDeleted(card.id);
+    } catch (err) {
+      setConfirmingDelete(false);
+      setError(err instanceof Error ? err.message : "Could not delete card.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -81,7 +115,11 @@ export default function CardModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => title !== card.title && patch({ title })}
+          disabled={saving}
         />
+
+        {error && <p className="status-message is-error">{error}</p>}
+        {saving && <p className="status-message">Saving...</p>}
 
         <div className="modal-row">
           <span className="modal-label">Priority</span>
@@ -89,6 +127,7 @@ export default function CardModal({
             className="modal-select"
             value={card.priority ?? ""}
             onChange={(e) => patch({ priority: e.target.value || null })}
+            disabled={saving}
           >
             <option value="">None</option>
             <option value="LOW">Low</option>
@@ -102,6 +141,7 @@ export default function CardModal({
             className="modal-select"
             value={card.assignee?.id ?? ""}
             onChange={(e) => patch({ assigneeId: e.target.value || null })}
+            disabled={saving}
           >
             <option value="">Unassigned</option>
             {users.map((u) => (
@@ -118,6 +158,7 @@ export default function CardModal({
             type="date"
             value={card.dueDate ? card.dueDate.slice(0, 10) : ""}
             onChange={(e) => patch({ dueDate: e.target.value || null })}
+            disabled={saving}
           />
         </div>
 
@@ -127,6 +168,7 @@ export default function CardModal({
           onChange={(e) => setDescription(e.target.value)}
           onBlur={() => description !== (card.description ?? "") && patch({ description })}
           placeholder="Description"
+          disabled={saving}
         />
 
         <p className="modal-foot">

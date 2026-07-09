@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
-type User = { id: string; username: string; displayName: string; avatarColor: string };
+export type User = { id: string; username: string; displayName: string; avatarColor: string };
 type Status = "OPEN" | "DISCUSS" | "BLOCKING" | "RESOLVED";
-type Decision = {
+export type Decision = {
   id: string;
   title: string;
   note: string | null;
@@ -25,25 +26,24 @@ const STATUS_LABEL: Record<Status, string> = {
   RESOLVED: "Resolved",
 };
 
-export default function DecisionsPanel() {
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+export default function DecisionsPanel({
+  initialDecisions,
+  initialUsers,
+}: {
+  initialDecisions: Decision[];
+  initialUsers: User[];
+}) {
+  const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [ownerId, setOwnerId] = useState("");
   const [status, setStatus] = useState<Status>("OPEN");
   const [note, setNote] = useState("");
-
-  async function load() {
-    const res = await fetch("/api/decisions");
-    setDecisions(await res.json());
-  }
-
-  useEffect(() => {
-    load();
-    fetch("/api/users").then((r) => r.json()).then(setUsers);
-  }, []);
+  const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   function resetForm() {
     setEditingId(null);
@@ -55,6 +55,7 @@ export default function DecisionsPanel() {
   }
 
   function startEdit(d: Decision) {
+    setError(null);
     setEditingId(d.id);
     setTitle(d.title);
     setOwnerId(d.owner?.id ?? "");
@@ -63,46 +64,80 @@ export default function DecisionsPanel() {
     setShowForm(true);
   }
 
+  async function responseError(res: Response, fallback: string) {
+    const data = await res.json().catch(() => null);
+    return data?.error ?? fallback;
+  }
+
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+    setSaving(true);
+    setError(null);
     const payload = { title, ownerId: ownerId || null, status, note: note || null };
-    if (editingId) {
-      const res = await fetch(`/api/decisions/${editingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) return;
-      const updated = await res.json();
-      setDecisions((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
-    } else {
-      const res = await fetch("/api/decisions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) return;
-      const created = await res.json();
-      setDecisions((prev) => [...prev, created]);
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/decisions/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await responseError(res, "Could not save decision."));
+        const updated = await res.json();
+        setDecisions((prev) =>
+          updated.status === "RESOLVED"
+            ? prev.filter((d) => d.id !== updated.id)
+            : prev.map((d) => (d.id === updated.id ? updated : d))
+        );
+      } else {
+        const res = await fetch("/api/decisions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await responseError(res, "Could not save decision."));
+        const created = await res.json();
+        if (created.status !== "RESOLVED") setDecisions((prev) => [...prev, created]);
+      }
+      resetForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save decision.");
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   }
 
   async function resolve(id: string) {
-    const res = await fetch(`/api/decisions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "RESOLVED" }),
-    });
-    if (!res.ok) return;
-    setDecisions((prev) => prev.filter((d) => d.id !== id)); // resolved drops off the "needed" list
+    setBusyId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/decisions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "RESOLVED" }),
+      });
+      if (!res.ok) throw new Error(await responseError(res, "Could not resolve decision."));
+      setDecisions((prev) => prev.filter((d) => d.id !== id)); // resolved drops off the "needed" list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resolve decision.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   async function remove(id: string) {
-    const res = await fetch(`/api/decisions/${id}`, { method: "DELETE" });
-    if (!res.ok) return;
-    setDecisions((prev) => prev.filter((d) => d.id !== id));
+    setBusyId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/decisions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await responseError(res, "Could not delete decision."));
+      setDecisions((prev) => prev.filter((d) => d.id !== id));
+      setDeletingId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete decision.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -115,6 +150,7 @@ export default function DecisionsPanel() {
           className="btn-secondary"
           type="button"
           onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          disabled={saving}
         >
           {showForm ? "Cancel" : "+ New"}
         </button>
@@ -122,22 +158,24 @@ export default function DecisionsPanel() {
 
       {showForm && (
         <form className="decision-form is-open" onSubmit={save}>
+          {error && <p className="status-message is-error">{error}</p>}
           <div className="decision-form-grid">
             <input
               className="decision-input"
               placeholder="Decision title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              disabled={saving}
             />
-            <select className="decision-select" value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+            <select className="decision-select" value={ownerId} onChange={(e) => setOwnerId(e.target.value)} disabled={saving}>
               <option value="">Owner…</option>
-              {users.map((u) => (
+              {initialUsers.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.displayName}
                 </option>
               ))}
             </select>
-            <select className="decision-select" value={status} onChange={(e) => setStatus(e.target.value as Status)}>
+            <select className="decision-select" value={status} onChange={(e) => setStatus(e.target.value as Status)} disabled={saving}>
               <option value="OPEN">Open</option>
               <option value="DISCUSS">Discuss</option>
               <option value="BLOCKING">Blocking</option>
@@ -149,19 +187,21 @@ export default function DecisionsPanel() {
             placeholder="What needs deciding?"
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            disabled={saving}
           />
           <div className="decision-form-actions">
-            <button className="btn-secondary" type="button" onClick={resetForm}>
+            <button className="btn-secondary" type="button" onClick={resetForm} disabled={saving}>
               Cancel
             </button>
-            <button className="btn-primary" type="submit">
-              {editingId ? "Save changes" : "Save decision"}
+            <button className="btn-primary" type="submit" disabled={saving}>
+              {saving ? "Saving..." : editingId ? "Save changes" : "Save decision"}
             </button>
           </div>
         </form>
       )}
 
       <div className="decision-list">
+        {!showForm && error && <p className="status-message is-error">{error}</p>}
         {decisions.length === 0 && <p className="column-empty">No decisions to make right now.</p>}
         {decisions.map((d) => (
           <article className="decision-item" key={d.id}>
@@ -175,17 +215,18 @@ export default function DecisionsPanel() {
             <div className="decision-side">
               <span className={`pill ${STATUS_PILL[d.status]} decision-status`}>{STATUS_LABEL[d.status]}</span>
               <div className="decision-actions">
-                <button className="icon-btn" type="button" aria-label="Edit decision" onClick={() => startEdit(d)}>
+                <button className="icon-btn" type="button" aria-label="Edit decision" onClick={() => startEdit(d)} disabled={busyId === d.id}>
                   ✎
                 </button>
-                <button className="icon-btn" type="button" aria-label="Resolve decision" onClick={() => resolve(d.id)}>
+                <button className="icon-btn" type="button" aria-label="Resolve decision" onClick={() => resolve(d.id)} disabled={busyId === d.id}>
                   ✓
                 </button>
                 <button
                   className="icon-btn is-danger"
                   type="button"
                   aria-label="Delete decision"
-                  onClick={() => remove(d.id)}
+                  onClick={() => setDeletingId(d.id)}
+                  disabled={busyId === d.id}
                 >
                   ×
                 </button>
@@ -194,6 +235,16 @@ export default function DecisionsPanel() {
           </article>
         ))}
       </div>
+
+      {deletingId && (
+        <ConfirmDialog
+          title="Delete this decision?"
+          message="This will permanently remove it from the decisions list."
+          confirmLabel="Delete decision"
+          onConfirm={() => remove(deletingId)}
+          onCancel={() => setDeletingId(null)}
+        />
+      )}
     </section>
   );
 }

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { USER_SUMMARY_SELECT } from "@/lib/boards";
-
-const STATUSES = ["OPEN", "DISCUSS", "BLOCKING", "RESOLVED"] as const;
-function isStatus(v: unknown): boolean {
-  return typeof v === "string" && (STATUSES as readonly string[]).includes(v);
-}
+import { formatZodError, updateDecisionSchema } from "@/lib/validation";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,18 +9,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!existing) return NextResponse.json({ error: "Decision not found" }, { status: 404 });
 
   const body = await request.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  if (body.status !== undefined && !isStatus(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  const parsed = updateDecisionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+  }
+
+  const data = parsed.data;
+  if (data.ownerId) {
+    const owner = await prisma.user.findUnique({ where: { id: data.ownerId }, select: { id: true } });
+    if (!owner) return NextResponse.json({ error: "Owner not found" }, { status: 400 });
   }
 
   const decision = await prisma.decision.update({
     where: { id },
     data: {
-      ...(body.title !== undefined && { title: body.title }),
-      ...(body.note !== undefined && { note: body.note }),
-      ...(body.ownerId !== undefined && { ownerId: body.ownerId }),
-      ...(body.status !== undefined && { status: body.status }),
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.note !== undefined && { note: data.note }),
+      ...(data.ownerId !== undefined && { ownerId: data.ownerId }),
+      ...(data.status !== undefined && { status: data.status }),
     },
     include: { owner: { select: USER_SUMMARY_SELECT } },
   });
